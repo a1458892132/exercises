@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>计算机基础多选题 - 可计分练习题库</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#165DFF',
+                        success: '#00B42A',
+                        danger: '#F53F3F',
+                        warning: '#FF7D00',
+                        info: '#86909C',
+                        light: '#F2F3F5',
+                        dark: '#1D2129',
+                    },
+                    fontFamily: {
+                        sans: ['Microsoft YaHei', 'Inter', 'system-ui', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .question-card {
+                @apply bg-white rounded-lg shadow-md p-5 mb-4 transition-all duration-300 hover:shadow-lg border-l-4 border-transparent;
+            }
+            .question-answered {
+                @apply border-l-4 border-primary;
+            }
+            .option-btn {
+                @apply w-full flex items-center gap-2 px-4 py-2.5 rounded-lg font-medium transition-all duration-200 border-2 mb-2;
+            }
+            .option-unselected {
+                @apply border-info bg-white text-info hover:bg-info/5 hover:border-info/80;
+            }
+            .option-correct {
+                @apply border-success bg-success/10 text-success;
+            }
+            .option-wrong {
+                @apply border-danger bg-danger/10 text-danger;
+            }
+            .score-bar {
+                @apply h-2 bg-gray-200 rounded-full overflow-hidden;
+            }
+            .score-progress {
+                @apply h-full bg-primary transition-all duration-500 ease-in-out;
+            }
+            .category-tag {
+                @apply px-3 py-1 rounded-full text-xs font-medium mr-2 mb-2 cursor-pointer;
+            }
+            .category-active {
+                @apply bg-primary/10 text-primary border border-primary/20;
+            }
+            .btn-primary {
+                @apply bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors duration-200 font-medium;
+            }
+            .btn-secondary {
+                @apply bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors duration-200 font-medium;
+            }
+            .hide-ans {
+                @apply blur-sm;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen pb-20">
+    <div class="container mx-auto px-4 py-6 max-w-4xl">
+        <header class="mb-6 text-center">
+            <h1 class="text-[clamp(1.6rem,4vw,2.2rem)] font-bold text-dark mb-2">计算机基础多选题题库</h1>
+            <p class="text-info text-base">
+                <a href="index1.html">判断题</a>
+                <a href="index3.html">单选题</a>
+            </p>
+        </header>
+
+        <div class="bg-white rounded-lg shadow-sm p-4 mb-6 flex flex-wrap items-center justify-between gap-3">
+            <div class="flex flex-wrap gap-2">
+                <span class="text-gray-700 font-medium self-center mr-2">分类：</span>
+                <button class="category-tag category-active" data-cate="all">全部</button>
+                <button class="category-tag bg-gray-100 text-gray-700" data-cate="base">计算机基础</button>
+                <button class="category-tag bg-gray-100 text-gray-700" data-cate="office">Office办公</button>
+                <button class="category-tag bg-gray-100 text-gray-700" data-cate="network">网络知识</button>
+                <button class="category-tag bg-gray-100 text-gray-700" data-cate="design">设计软件</button>
+                <button class="category-tag bg-gray-100 text-gray-700" data-cate="windows">Windows系统</button>
+            </div>
+
+            <div class="flex flex-wrap gap-2">
+                <button id="toggle-ans" class="btn-secondary flex items-center gap-1">
+                    <i class="fa fa-eye-slash"></i> 隐藏答案
+                </button>
+                <button id="calc-score" class="btn-primary flex items-center gap-1">
+                    <i class="fa fa-calculator"></i> 计算得分
+                </button>
+                <button id="reset-all" class="btn-secondary flex items-center gap-1">
+                    <i class="fa fa-refresh"></i> 重新练习
+                </button>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-sm p-4 mb-6 grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div class="text-center">
+                <p class="text-info text-sm">总题数</p>
+                <p class="text-2xl font-bold text-dark" id="total-count">65</p>
+            </div>
+            <div class="text-center">
+                <p class="text-info text-sm">已答题数</p>
+                <p class="text-2xl font-bold text-primary" id="answered-count">0</p>
+            </div>
+            <div class="text-center">
+                <p class="text-info text-sm">正确题数</p>
+                <p class="text-2xl font-bold text-success" id="correct-count">0</p>
+            </div>
+            <div class="text-center">
+                <p class="text-info text-sm">当前得分</p>
+                <p class="text-2xl font-bold text-warning" id="current-score">0</p>
+                <p class="text-xs text-info">（每题1分）</p>
+            </div>
+        </div>
+
+        <div class="mb-6">
+            <div class="flex justify-between text-sm text-info mb-1">
+                <span>答题进度</span>
+                <span id="progress-text">0/65</span>
+            </div>
+            <div class="score-bar">
+                <div class="score-progress" id="progress-bar" style="width: 0%"></div>
+            </div>
+        </div>
+
+        <div id="questions-container" class="space-y-3"></div>
+
+        <div id="score-modal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden">
+            <div class="bg-white rounded-lg shadow-2xl p-6 w-full max-w-md transform transition-all scale-95 opacity-0" id="modal-content">
+                <div class="text-center mb-4">
+                    <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 text-primary mb-3">
+                        <i class="fa fa-trophy text-3xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-dark">练习得分结果</h3>
+                    <p class="text-info">本次练习共作答 <span id="modal-answered" class="font-bold text-primary">0</span> 题</p>
+                </div>
+                <div class="grid grid-cols-2 gap-4 mb-6">
+                    <div class="bg-light rounded-lg p-3 text-center">
+                        <p class="text-info text-sm">正确题数</p>
+                        <p class="text-2xl font-bold text-success" id="modal-correct">0</p>
+                    </div>
+                    <div class="bg-light rounded-lg p-3 text-center">
+                        <p class="text-info text-sm">最终得分</p>
+                        <p class="text-2xl font-bold text-warning" id="modal-score">0</p>
+                    </div>
+                </div>
+                <div class="score-bar mb-6">
+                    <div class="score-progress" id="modal-progress" style="width: 0%"></div>
+                </div>
+                <div class="flex gap-3">
+                    <button id="modal-close" class="btn-secondary flex-1">关闭</button>
+                    <button id="modal-reset" class="btn-primary flex-1">重新练习</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 多选题题库数据（本地内置，无需网络）
+        const questions = [
+            {"number":1,"question":"下面那哪些是属于信息技术应用的例子（）","options":{"A":"三维动画游戏","B":"网上购物","C":"个性化手机","D":"语音输入"},"answer":["A","B","C","D"],"cate":"base"},
+            {"number":2,"question":"属于输入设备的是（）。","options":{"A":"键盘","B":"鼠标","C":"摄像头","D":"打印机"},"answer":["A","B","C"],"cate":"base"},
+            {"number":3,"question":"所谓移动学习我们可以借助的工具有（）","options":{"A":"平板电脑","B":"手机","C":"铅笔","D":"投影仪"},"answer":["A","B"],"cate":"base"},
+            {"number":4,"question":"下面软件（）是应用软件。","options":{"A":"Windows","B":"Flash","C":"Photoshop","D":"Dreamweaver"},"answer":["B","C","D"],"cate":"base"},
+            {"number":5,"question":"下面关于工作表说法正确的有（）。","options":{"A":"工作表也称电子表格，是Excel用来存储和处理数据的地方","B":"新建一个工作簿时，Excel应用程序窗口显示的是它的第一个工作表","C":"列标题用字母A，B，...，Z，AA，AB，，，，IV表示，共256列","D":"行标题用数字1，2，...，65536表示，共65536行"},"answer":["A","B","C","D"],"cate":"office"},
+            {"number":6,"question":"要对图表中数据值进行修改，可采取的办法是（）。","options":{"A":"在数据源中进行修改","B":"在图表中直接进行修改","C":"一经生成图表，则数据不能再被修改","D":"删除图表，修改数据后再重新生成图表"},"answer":["A","B","D"],"cate":"office"},
+            {"number":7,"question":"以下关于Excel的叙述中错误的是（）。","options":{"A":"Excel将工作簿的每一张工作表分别作为一个文件来保存","B":"Excel允许同时打开多个工作簿文件进行处理","C":"Excel的图表必须与生成该图表的有关数据处于同一张工作表上","D":"Excel工作表的名称由文件名决定"},"answer":["A","C","D"],"cate":"office"},
+            {"number":8,"question":"以下哪些是Excel中常见的函数（）。","options":{"A":"AVERAGE","B":"SUM","C":"MAX","D":"MIN"},"answer":["A","B","C","D"],"cate":"office"},
+            {"number":9,"question":"Word2010具有分栏功能，下列关于分栏的说法中不正确的是()。","options":{"A":"最多可以设4栏","B":"各栏的宽度必须相同","C":"各栏的宽度可以不同","D":"各栏不同的间距是固定的"},"answer":["A","B","D"],"cate":"office"},
+            {"number":10,"question":"下列关于Excel2010的“排序”功能，说法正确的有（）","options":{"A":"可以按行排序","B":"可以按列排序","C":"最多允许有三个排序关键字","D":"可以自定义序列排序"},"answer":["A","B","D"],"cate":"office"},
+            {"number":11,"question":"在PowerPoint2010中可插入的对象有()。","options":{"A":"WPS文档","B":"WIN98","C":"WORD文档","D":"视频片段"},"answer":["A","C","D"],"cate":"office"},
+            {"number":12,"question":"在Excel中，数据的排序方式有()。","options":{"A":"按升序排列","B":"按降序排列","C":"按某单元格排序","D":"求和排序"},"answer":["A","B"],"cate":"office"},
+            {"number":13,"question":"在Excel中，下列公式正确的是()。","options":{"A":"A1+5","B":"=A1+B2*40%","C":"=SUM(A1:B6)","D":"=B3/4"},"answer":["B","C","D"],"cate":"office"},
+            {"number":14,"question":"Excel对表格的修饰可以（）。","options":{"A":"给表格加上颜色","B":"设置表格的边框","C":"改变行高","D":"改变列宽"},"answer":["A","B","C","D"],"cate":"office"},
+            {"number":15,"question":"Excel中，利用“开始”选项卡中的“填充”命令可以（）。","options":{"A":"按行填充或按列填充","B":"填充相同数据或序列","C":"填充日期序列可以按月或按年递增","D":"设置填充序列的终止值"},"answer":["A","B","C","D"],"cate":"office"},
+            {"number":16,"question":"在Excel中，我们可以对数据进行（）等操作。","options":{"A":"排序","B":"分类汇总","C":"筛选","D":"删除"},"answer":["A","B","C","D"],"cate":"office"},
+            {"number":17,"question":"在Excel中输入了一组数据，现选择了其中一部分(连续的一个矩形区域)后单击复制按钮，下列说法正确的有()","options":{"A":"可以粘贴到另一个工作表中","B":"可以粘贴到Word文档中，粘贴后是一个表格","C":"可以粘贴到Word文档中，粘贴后不是一个表格，是一组连续的数据，中间没有任何分隔符","D":"不能粘贴到Word文档中"},"answer":["A","B"],"cate":"office"},
+            {"number":18,"question":"下列说法错误的是（）。","options":{"A":"直接可以对工作表进行分类汇总","B":"只要选定区域即可分类汇总","C":"对工作表中数据分类汇总前需要先排序","D":"对工作表中数据分类汇总前不需要先排序"},"answer":["A","B","D"],"cate":"office"},
+            {"number":19,"question":"我们想用IE浏览某网站时,可以()。","options":{"A":"在地址栏中输入该网站的网址","B":"点菜单项\"文件\"的\"打开\"","C":"点\"收藏\"钮，点击该网站","D":"打电话给该网站的网管"},"answer":["A","B","C"],"cate":"network"},
+            {"number":20,"question":"在Internet Explorer浏览器中，下列关于“主页设置”的描述正确的是（）。","options":{"A":"大多数网页可设置主页","B":"只能将网站的首页设置为主页","C":"可以使用“空白页”作为主页","D":"单击“主页”按钮，就可以打开所设置的主页"},"answer":["A","C","D"],"cate":"network"},
+            {"number":21,"question":"在使用浏览器浏览网页的以下操作中，能浏览刚才访问过的页面的操作有()","options":{"A":"打开地址栏的下拉列表，然后选择一个页面","B":"单击工具栏上的\"历史\"按钮，然后选择一个页面","C":"单击工具栏上的\"后退\"按钮","D":"在\"查看\"菜单中选择\"刷新\"命令"},"answer":["A","B","C"],"cate":"network"},
+            {"number":22,"question":"浏览器的收藏夹常用来管理网络信息，对它的认识正确的是()","options":{"A":"收藏夹可以象资源管理器一样进行复制、剪切和粘贴操作","B":"正常情况下，Windows安装完毕，在收藏夹下有一个默认的\"链接\"文件夹","C":"收藏夹可以备份，在系统崩溃重新安装时可以把备份的收藏夹导入","D":"收藏夹可以自动添加我们浏览过的网站"},"answer":["A","B","C"],"cate":"network"},
+            {"number":23,"question":"以下属于网络存储工具的是（）","options":{"A":"百度云盘","B":"360云盘","C":"金山快盘","D":"U盘"},"answer":["A","B","C"],"cate":"network"},
+            {"number":24,"question":"RGB格式的文件包含（）颜色通道。","options":{"A":"红色","B":"黄色","C":"蓝色","D":"绿色"},"answer":["A","C","D"],"cate":"design"},
+            {"number":25,"question":"下列关于Photoshop打开文件的操作，哪个是正确的？（）","options":{"A":"选择“文件——打开”命令，在弹出的对话框中选择要打开的文件","B":"如果图像是Photoshop软件创建的，直接双击图像图标","C":"将图像图标拖放到Photoshop软件图标上","D":"打开文件后，图像可以自动变大"},"answer":["A","B","C"],"cate":"design"},
+            {"number":26,"question":"下列文件格式中，哪些是图像文件的扩展名()","options":{"A":".TXT","B":".JPG","C":".GIF","D":".BMP"},"answer":["B","C","D"],"cate":"design"},
+            {"number":27,"question":"在Photoshop的套索工具中包含哪几种套索类型（）。","options":{"A":"自由套索工具","B":"多边形套索工具","C":"矩形套索工具","D":"磁性套索工具"},"answer":["A","B","D"],"cate":"design"},
+            {"number":28,"question":"在Photoshop中，橡皮擦工具选项栏中有哪些模式（）。","options":{"A":"画笔","B":"铅笔","C":"直线","D":"块"},"answer":["A","B","D"],"cate":"design"},
+            {"number":29,"question":"在Photoshop中，以下说法正确的是（）。","options":{"A":"当RGB色彩值都是0时，该部分是白色","B":"当RGB色彩值都是0时，该部分是黑色","C":"当RGB色彩值都是255时，该部分是白色","D":"当RGB色彩值都是255时，该部分是黑色"},"answer":["B","C"],"cate":"design"},
+            {"number":30,"question":"在Photoshop中，属于选取工具的是（）。","options":{"A":"磁性套索工具","B":"自由套索工具","C":"喷枪工具","D":"魔棒工具"},"answer":["A","B","D"],"cate":"design"},
+            {"number":31,"question":"在Photoshop中，与图像属性相关的设置选项有（）。","options":{"A":"亮度","B":"对比度","C":"分辨率","D":"色相"},"answer":["A","B","C","D"],"cate":"design"},
+            {"number":32,"question":"在Photoshop中，下面哪些选项属于规则选择工具（）","options":{"A":"矩形选择工具","B":"椭圆形选择工具","C":"魔术棒工具","D":"套索工具"},"answer":["A","B"],"cate":"design"},
+            {"number":33,"question":"关于图层，下列说法中正确的有 ()","options":{"A":"图层是图像合成中经常使用的一种技术","B":"图层相当于一个透明的容器，用来放置图像元素","C":"为了方便处理，通常每个图层放一个图像元素或一组类似的图像元素","D":"Photoshop和Windows自带的画图软件都具有图层的功能"},"answer":["A","B","C"],"cate":"design"},
+            {"number":34,"question":"云盘是互联网云技术的产物，它通过互联网为企业和个人提供信息的（）","options":{"A":"存储","B":"读取","C":"下载","D":"编辑"},"answer":["A","B","C"],"cate":"network"},
+            {"number":35,"question":"云盘是互联网存储工具，它是互联网云技术的产物，具有的特点是（）。","options":{"A":"安全保密性好","B":"存储容量大","C":"好友可以共享","D":"信息传递速度快"},"answer":["A","B","C","D"],"cate":"network"},
+            {"number":36,"question":"Internet提供的服务包括（）。","options":{"A":"远程登录","B":"信息查寻服务","C":"电子邮件","D":"文件传输"},"answer":["A","B","C","D"],"cate":"network"},
+            {"number":37,"question":"关于收发电子邮件，以下叙述正确的是（）。","options":{"A":"必须在固定的计算机上收/发邮件","B":"向对方发送邮件时，不要求对方开机","C":"一次只能发给一个接收者","D":"发送邮件需填写对方邮件地址"},"answer":["B","D"],"cate":"network"},
+            {"number":38,"question":"利用电子邮件，我们可以做到（）。","options":{"A":"一信多发","B":"邮寄多媒体文件","C":"邮寄包裹","D":"邮寄钞票"},"answer":["A","B"],"cate":"network"},
+            {"number":39,"question":"青少年应该具备的网络素养包括（）。","options":{"A":"了解电脑和网络的基本知识","B":"上网成瘾","C":"发现和处理信息的能力","D":"具有创造和传播信息的能力"},"answer":["A","C","D"],"cate":"network"},
+            {"number":40,"question":"在Internet上我们可以做（）。","options":{"A":"浏览信息","B":"收发邮件","C":"下载资料","D":"聊天"},"answer":["A","B","C","D"],"cate":"network"},
+            {"number":41,"question":"某学生想给他的同学发一封电子邮件，他必须知道（）。","options":{"A":"他同学的电子邮箱地址","B":"他自己的电子邮箱地址","C":"他同学家的门牌号码","D":"他同学的计算机是否开机"},"answer":["A","B"],"cate":"network"},
+            {"number":42,"question":"通过计算机网络不可以共享的是（）","options":{"A":"打印机","B":"键盘","C":"显示器","D":"鼠标"},"answer":["B","C","D"],"cate":"network"},
+            {"number":43,"question":"计算机网络按拓扑结构来划分，可以分为（）。","options":{"A":"星形网","B":"总线形网","C":"环形网","D":"直线形网"},"answer":["A","B","C"],"cate":"network"},
+            {"number":44,"question":"以下的一些网络行为错误的是（）","options":{"A":"在网上言论可以肆无忌惮，想说什么就说什么。","B":"上网的时候可以利用网络工具攻击别人的网站、计算机等。","C":"使用微信、微博发布一些虚假信息没人知道谁发的，没关系。","D":"利用网络可以销售假冒、违禁品。"},"answer":["A","B","C","D"],"cate":"network"},
+            {"number":45,"question":"互联网信息服务提供者不得制作、复制、发布、传播含有下列内容的信息：","options":{"A":"反对宪法所确定的基本原则的；","B":"危害国家安全，泄露国家秘密，颠覆国家政权，破坏国家统一的；","C":"损害国家荣誉和利益的；","D":"煽动民族仇恨、民族歧视，破坏民族团结的；"},"answer":["A","B","C","D"],"cate":"network"},
+            {"number":46,"question":"在市场上比较流行，而又能够代表未来发展方向的安全产品有以下（）类：","options":{"A":"用户身份认证：包括：静态密码、动态密码（短信密码、动态口令牌、手机令牌）、USB KEY、IC卡、数字证书、指纹虹膜等。","B":"防火墙：防火墙在某种意义上可以说是一种访问控制产品。它在内部网络与不安全的外部网络之间设置障碍，阻止外界对内部资源的非法访问，防止内部对外部的不安全访问。","C":"安全路由器：由于WAN连接需要专用的路由器设备，因而可通过路由器来控制网络传输。通常采用访问控制列表技术来控制网络信息流。","D":"虚拟专用网(VPN)"},"answer":["A","B","C","D"],"cate":"network"},
+            {"number":47,"question":"网络博客系统已经成为许多人存储信息资源的工具，在博客上实现的功能有（）。","options":{"A":"上传学习资源","B":"发布学习内容","C":"设置日志为保密","D":"不能删除日志"},"answer":["A","B","C"],"cate":"network"},
+            {"number":48,"question":"下列选项中，影响系统稳定运行的原因主要有（）。","options":{"A":"未安装系统补丁","B":"未安装杀毒软件","C":"被强行安装了“流氓”软件","D":"硬盘内的文件存储太多"},"answer":["A","B","C"],"cate":"base"},
+            {"number":49,"question":"互联网的隐蔽性使得网络欺骗、诈骗及盗窃的案件屡见报端，为了保护好个人隐私，需要做到()","options":{"A":"在电脑中安装防火墙和杀毒软件并及时升级","B":"要传送敏感数据时，为了不泄密，要选择加密发送","C":"在公共场所上网时要及时清除上网记录","D":"对网友要真诚相待,没必要隐藏个人真实信息"},"answer":["A","B","C"],"cate":"network"},
+            {"number":50,"question":"网络对青少年的危害","options":{"A":"意志毅力的消磨和自控能力的下降","B":"对周围人事的不信任和紧张的人际关系","C":"网络安全隐患和网络犯罪现象","D":"价值观念的模糊和道德观念的淡化."},"answer":["A","B","C","D"],"cate":"network"},
+            {"number":51,"question":"小明想在网上购买一件昂贵的数码相机，不恰当的做法有（）。","options":{"A":"先让对方寄货，收到货后不再汇款","B":"独自一人带现金到对方指定地点取货","C":"先将部分款汇到对方指定的账户上，收到货后再汇去余下的款","D":"先将款汇到经国家有关部门认证的、信誉良好的中介机构，收到货后再通知中介机构把款汇给对方"},"answer":["A","B","C"],"cate":"network"},
+            {"number":52,"question":"Windows中回收站的功能的是（）。","options":{"A":"恢复删除文件","B":"清空回收站","C":"复制","D":"U盘格式化"},"answer":["A","B"],"cate":"windows"},
+            {"number":53,"question":"在WindowsXP资源管理器中选定一个文件夹后，下列操作中能删除该文件夹的是( )。","options":{"A":"在键盘上按Del键","B":"用鼠标右键单击该文件夹，打开快捷菜单，然后选择“删除”命令","C":"在文件菜单中选择“删除”命令","D":"用鼠标左键双击该文件夹"},"answer":["A","B","C"],"cate":"windows"},
+            {"number":54,"question":"使用Windows操作系统时 ，下列说法不正确的是（）。","options":{"A":"不能同时打开多个窗口","B":"可以同时打开多个窗口","C":"不能同时执行多种任务","D":"可以在断电后保存内存中的信息"},"answer":["A","C","D"],"cate":"windows"},
+            {"number":55,"question":"通常关闭windows程序的方法有()。","options":{"A":"Ctrl+F4","B":"Alt+F4","C":"单击窗口最右边的关闭按纽","D":"双击窗口标题栏最左边的图标"},"answer":["B","C","D"],"cate":"windows"},
+            {"number":56,"question":"下面那些说法是正确的( )。","options":{"A":"回收站实际上是用来存放被用户删除掉的文件的地方，这些文件在需要时还可以恢复","B":"在删除的同时按住Shift键，被删除的文件是不保存在“回收站”里的","C":"回收站的图标，根据回收站里是否有被删除的文件而不同","D":"回收站的容量是可以由用户自己指定的"},"answer":["A","B","C","D"],"cate":"windows"},
+            {"number":57,"question":"以下哪些操作是通过单击鼠标左键完成的（）。","options":{"A":"启动桌面的应用程序","B":"从“开始”→“菜单”中启动某个应用程序","C":"选对话框中的某些按钮","D":"执行工具栏中的某些工具"},"answer":["B","C","D"],"cate":"windows"},
+            {"number":58,"question":"在WINDOW中，有两个对系统资源进行管理的程序组，它们是（）。","options":{"A":"我的电脑","B":"资源管理器","C":"回收站","D":"我的文档"},"answer":["A","B"],"cate":"windows"},
+            {"number":59,"question":"执行应用程序的方法有（）。","options":{"A":"双击桌面图标表示的应用程序","B":"在文件菜单中，打开文本文件执行","C":"在开始按钮中找到应用程序菜单，单击执行","D":"执行开始菜单中的运行命令，输入应用程序名执行"},"answer":["A","C","D"],"cate":"windows"},
+            {"number":60,"question":"下列有关文件夹的叙述中，正确的有()","options":{"A":"文件夹一经建立就不能删除","B":"文件夹可根据需要来建立","C":"文件夹是可以移动的","D":"文件夹名称是可以改变的"},"answer":["B","C","D"],"cate":"windows"},
+            {"number":61,"question":"Windows对文件和文件夹的命名规定正确的是（）。","options":{"A":"文件名或文件夹名最多可由255个字符和数字组成","B":"文件名中可有空格但不能有？、*、和：","C":"同一文件夹中的文件或子文件夹能同名","D":"区分英文大小写"},"answer":["A","B"],"cate":"windows"},
+            {"number":62,"question":"在默认情况下，资源管理器的排序方式可以是（）。","options":{"A":"按名称","B":"按类型","C":"按大小","D":"按日期"},"answer":["A","B","C","D"],"cate":"windows"},
+            {"number":63,"question":"大家都熟知的微信，其基本服务功能有（）","options":{"A":"聊天","B":"添加好友","C":"实时对讲机","D":"支付消费"},"answer":["A","B","C","D"],"cate":"network"},
+            {"number":64,"question":"计算机时钟用于记录创建或修改计算机中文件的时间。以下说法正确的是（）","options":{"A":"计算机时钟无法更改","B":"计算机时钟可以更改","C":"计算机时钟更改后可以恢复","D":"计算机时钟可以自动定期同步"},"answer":["B","C","D"],"cate":"base"},
+            {"number":65,"question":"使用 Windows 7的备份功能所创建的系统镜像可以保存在()上。","options":{"A":"内存","B":"硬盘","C":"光盘","D":"网络"},"answer":["B","C","D"],"cate":"windows"}
+        ];
+
+        // 分类配置
+        const cateConfig = {
+            all: {name: '全部', color: 'primary'},
+            base: {name: '计算机基础', color: 'bg-blue-100 text-blue-700'},
+            office: {name: 'Office办公', color: 'bg-purple-100 text-purple-700'},
+            network: {name: '网络知识', color: 'bg-green-100 text-green-700'},
+            design: {name: '设计软件', color: 'bg-yellow-100 text-yellow-700'},
+            windows: {name: 'Windows系统', color: 'bg-red-100 text-red-700'}
+        };
+
+        // 全局状态
+        const state = {
+            userAnswers: {}, // 存储用户答案 {题号: [选中选项]}
+            currentCate: 'all',
+            showAnswer: true,
+            total: questions.length,
+            answered: 0,
+            correct: 0,
+            score: 0
+        };
+
+        // DOM元素
+        const el = {
+            questionsContainer: document.getElementById('questions-container'),
+            totalCount: document.getElementById('total-count'),
+            answeredCount: document.getElementById('answered-count'),
+            correctCount: document.getElementById('correct-count'),
+            currentScore: document.getElementById('current-score'),
+            progressBar: document.getElementById('progress-bar'),
+            progressText: document.getElementById('progress-text'),
+            toggleAns: document.getElementById('toggle-ans'),
+            calcScore: document.getElementById('calc-score'),
+            resetAll: document.getElementById('reset-all'),
+            categoryTags: document.querySelectorAll('.category-tag'),
+            scoreModal: document.getElementById('score-modal'),
+            modalContent: document.getElementById('modal-content'),
+            modalClose: document.getElementById('modal-close'),
+            modalReset: document.getElementById('modal-reset'),
+            modalAnswered: document.getElementById('modal-answered'),
+            modalCorrect: document.getElementById('modal-correct'),
+            modalScore: document.getElementById('modal-score'),
+            modalProgress: document.getElementById('modal-progress')
+        };
+
+        // 初始化
+        function init() {
+            renderQuestions();
+            bindEvents();
+            updateStats();
+            el.totalCount.textContent = state.total;
+        }
+
+        // 渲染题目
+        function renderQuestions() {
+            el.questionsContainer.innerHTML = '';
+            
+            questions.forEach(q => {
+                if (state.currentCate !== 'all' && q.cate !== state.currentCate) return;
+                
+                const isAnswered = !!state.userAnswers[q.number];
+                const userAns = state.userAnswers[q.number] || [];
+                // 判断是否完全正确（选项数量和内容都一致）
+                const isCorrect = isAnswered && JSON.stringify([...userAns].sort()) === JSON.stringify([...q.answer].sort());
+
+                const card = document.createElement('div');
+                card.className = `question-card ${isAnswered ? 'question-answered' : ''}`;
+                card.dataset.number = q.number;
+                card.dataset.cate = q.cate;
+
+                // 生成选项HTML
+                let optionsHtml = '';
+                for (const [key, val] of Object.entries(q.options)) {
+                    const isSelected = userAns.includes(key);
+                    const isAnswer = q.answer.includes(key);
+                    let optionClass = 'option-unselected';
+                    if (isAnswered) {
+                        optionClass = isSelected ? (isAnswer ? 'option-correct' : 'option-wrong') : 'option-unselected';
+                    }
+                    optionsHtml += `
+                        <div class="option-btn ${optionClass}" data-q="${q.number}" data-opt="${key}">
+                            <span class="w-5 h-5 inline-flex items-center justify-center rounded-full border border-current">
+                                ${isSelected ? '<i class="fa fa-check text-xs"></i>' : ''}
+                            </span>
+                            <span>${key}：${val}</span>
+                        </div>
+                    `;
+                }
+
+                // 标准答案文本
+                const answerText = q.answer.join('、');
+                card.innerHTML = `
+                    <div class="flex items-start justify-between mb-3">
+                        <h3 class="text-lg font-semibold text-dark flex items-center gap-2">
+                            <span class="inline-flex items-center justify-center w-6 h-6 bg-primary text-white rounded-full text-sm">${q.number}</span>
+                            ${q.question}
+                        </h3>
+                        <span class="category-tag ${cateConfig[q.cate].color}">${cateConfig[q.cate].name}</span>
+                    </div>
+                    <div class="options-container mb-3">
+                        ${optionsHtml}
+                    </div>
+                    <div class="answer-area ${state.showAnswer ? '' : 'hide-ans'}">
+                        <p class="text-sm ${isCorrect ? 'text-success' : isAnswered ? 'text-danger' : 'text-info'}">
+                            ${isAnswered 
+                                ? (isCorrect ? `✅ 回答正确！标准答案：${answerText}` : `❌ 回答错误！标准答案：${answerText}`) 
+                                : '💡 点击选项作答后显示标准答案'}
+                        </p>
+                    </div>
+                `;
+
+                el.questionsContainer.appendChild(card);
+            });
+        }
+
+        // 更新统计
+        function updateStats() {
+            state.answered = Object.keys(state.userAnswers).length;
+            state.correct = 0;
+
+            // 遍历用户答案，判断正确数
+            for (const [qNum, userAns] of Object.entries(state.userAnswers)) {
+                const question = questions.find(q => q.number === parseInt(qNum));
+                if (JSON.stringify([...userAns].sort()) === JSON.stringify([...question.answer].sort())) {
+                    state.correct++;
+                }
+            }
+
+            state.score = state.correct;
+            // 更新DOM
+            el.answeredCount.textContent = state.answered;
+            el.correctCount.textContent = state.correct;
+            el.currentScore.textContent = state.score;
+            const progress = state.total > 0 ? (state.answered / state.total) * 100 : 0;
+            el.progressBar.style.width = `${progress}%`;
+            el.progressText.textContent = `${state.answered}/${state.total}`;
+        }
+
+        // 显示得分弹窗
+        function showScoreModal() {
+            el.modalAnswered.textContent = state.answered;
+            el.modalCorrect.textContent = state.correct;
+            el.modalScore.textContent = state.score;
+            const progress = state.answered > 0 ? (state.correct / state.answered) * 100 : 0;
+            el.modalProgress.style.width = `${progress}%`;
+            
+            el.scoreModal.classList.remove('hidden');
+            setTimeout(() => {
+                el.modalContent.classList.remove('scale-95', 'opacity-0');
+                el.modalContent.classList.add('scale-100', 'opacity-100');
+            }, 50);
+        }
+
+        // 关闭弹窗
+        function closeScoreModal() {
+            el.modalContent.classList.remove('scale-100', 'opacity-100');
+            el.modalContent.classList.add('scale-95', 'opacity-0');
+            setTimeout(() => {
+                el.scoreModal.classList.add('hidden');
+            }, 300);
+        }
+
+        // 重置作答
+        function resetAllAnswers() {
+            state.userAnswers = {};
+            updateStats();
+            renderQuestions();
+        }
+
+        // 切换答案显隐
+        function toggleAnswerShow() {
+            state.showAnswer = !state.showAnswer;
+            document.querySelectorAll('.answer-area').forEach(area => {
+                area.classList.toggle('hide-ans', !state.showAnswer);
+            });
+            el.toggleAns.innerHTML = state.showAnswer 
+                ? '<i class="fa fa-eye-slash"></i> 隐藏答案' 
+                : '<i class="fa fa-eye"></i> 显示答案';
+        }
+
+        // 绑定事件
+        function bindEvents() {
+            // 选项点击
+            el.questionsContainer.addEventListener('click', (e) => {
+                if (e.target.closest('.option-btn')) {
+                    const btn = e.target.closest('.option-btn');
+                    const qNum = parseInt(btn.dataset.q);
+                    const opt = btn.dataset.opt;
+
+                    // 初始化用户答案
+                    if (!state.userAnswers[qNum]) state.userAnswers[qNum] = [];
+                    const userAns = state.userAnswers[qNum];
+
+                    // 切换选中状态
+                    if (userAns.includes(opt)) {
+                        state.userAnswers[qNum] = userAns.filter(o => o !== opt);
+                    } else {
+                        state.userAnswers[qNum].push(opt);
+                    }
+
+                    updateStats();
+                    renderQuestions();
+                }
+            });
+
+            // 分类筛选
+            el.categoryTags.forEach(tag => {
+                tag.addEventListener('click', () => {
+                    el.categoryTags.forEach(t => t.classList.remove('category-active'));
+                    tag.classList.add('category-active');
+                    state.currentCate = tag.dataset.cate;
+                    renderQuestions();
+                });
+            });
+
+            // 切换答案显隐
+            el.toggleAns.addEventListener('click', toggleAnswerShow);
+
+            // 计算得分
+            el.calcScore.addEventListener('click', () => {
+                if (state.answered === 0) {
+                    alert('💡 还未作答任何题目，请先选择选项作答！');
+                    return;
+                }
+                showScoreModal();
+            });
+
+            // 重新练习
+            el.resetAll.addEventListener('click', () => {
+                if (confirm('⚠️ 确定要清空所有作答记录，重新开始练习吗？')) {
+                    resetAllAnswers();
+                }
+            });
+
+            // 弹窗关闭
+            el.modalClose.addEventListener('click', closeScoreModal);
+
+            // 弹窗重新练习
+            el.modalReset.addEventListener('click', () => {
+                resetAllAnswers();
+                closeScoreModal();
+            });
+
+            // 点击弹窗外层关闭
+            el.scoreModal.addEventListener('click', (e) => {
+                if (e.target === el.scoreModal) closeScoreModal();
+            });
+        }
+
+        // 页面加载初始化
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>

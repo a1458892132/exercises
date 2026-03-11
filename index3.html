@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>计算机基础单选题</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#165DFF',
+                        success: '#00B42A',
+                        danger: '#F53F3F',
+                        warning: '#FF7D00',
+                        info: '#86909C',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { background: #f9fafb; font-family: "Microsoft YaHei", sans-serif; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 15px; }
+        .question-card { background: white; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); padding: 16px; margin-bottom: 12px; border-left: 4px solid transparent; transition: all 0.3s; }
+        .question-answered { border-left-color: #165DFF; }
+        .question-card:hover { box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .option-btn { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border: 2px solid #86909C; border-radius: 6px; margin-bottom: 8px; cursor: pointer; transition: all 0.2s; background: white; color: #333; }
+        .option-btn:hover { background: #f2f3f5; }
+        .option-correct { border-color: #00B42A; background: #f0fdf4; color: #00B42A; }
+        .option-wrong { border-color: #F53F3F; background: #fef2f2; color: #F53F3F; }
+        .category-tag { padding: 4px 10px; border-radius: 16px; font-size: 12px; cursor: pointer; margin-right: 6px; margin-bottom: 6px; display: inline-block; }
+        .category-active { background: #e0e7ff; color: #165DFF; border: 1px solid #165DFF; }
+        .btn { padding: 8px 16px; border-radius: 6px; font-size: 14px; cursor: pointer; transition: all 0.2s; border: none; }
+        .btn-primary { background: #165DFF; color: white; }
+        .btn-primary:hover { background: #0d47a1; }
+        .btn-secondary { background: white; border: 1px solid #ddd; color: #333; }
+        .btn-secondary:hover { background: #f5f5f5; }
+        .score-bar { height: 8px; background: #e5e7eb; border-radius: 4px; overflow: hidden; }
+        .score-progress { height: 100%; background: #165DFF; transition: width 0.5s; }
+        .answer-area { margin-top: 8px; font-size: 13px; }
+        .hide-ans { filter: blur(4px); cursor: pointer; }
+        .hide-ans:hover { filter: blur(2px); }
+        .modal { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 100; display: none; }
+        .modal-content { background: white; border-radius: 12px; padding: 24px; width: 90%; max-width: 400px; transform: scale(0.95); opacity: 0; transition: all 0.3s; }
+        .modal.show { display: flex; }
+        .modal.show .modal-content { transform: scale(1); opacity: 1; }
+        .option-btn i { font-size: 12px; }
+        .question-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+        .question-title { font-size: 16px; font-weight: 600; color: #333; flex: 1; }
+        .question-number { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; background: #165DFF; color: white; border-radius: 50%; font-size: 12px; margin-right: 8px; }
+    </style>
+</head>
+<body>
+    <div class="container py-8">
+        <header class="text-center mb-8">
+            <h1 class="text-2xl md:text-2.5xl font-bold text-gray-800">计算机基础单选题题库</h1>
+            <p class="text-gray-500 mt-2">
+                <a class="text-primary" href="index1.html">判断题</a>
+                <a class="text-primary" href="index2.html">多选题</a>
+            </p>
+        </header>
+
+        <!-- 功能栏 -->
+        <div class="bg-white p-4 rounded-lg shadow-sm mb-6 flex flex-wrap gap-3 items-center justify-between">
+            <div class="flex flex-wrap">
+                <span class="text-gray-700 mr-2">分类：</span>
+                <div class="category-tag category-active" data-cate="all">全部</div>
+                <div class="category-tag bg-gray-100 text-gray-700" data-cate="base">计算机基础</div>
+                <div class="category-tag bg-gray-100 text-gray-700" data-cate="office">Office办公</div>
+                <div class="category-tag bg-gray-100 text-gray-700" data-cate="network">网络知识</div>
+                <div class="category-tag bg-gray-100 text-gray-700" data-cate="flash">Flash动画</div>
+                <div class="category-tag bg-gray-100 text-gray-700" data-cate="system">系统安全</div>
+            </div>
+            <div class="flex gap-2">
+                <button id="toggle-ans" class="btn btn-secondary"><i class="fa fa-eye-slash mr-1"></i> 隐藏答案</button>
+                <button id="calc-score" class="btn btn-primary"><i class="fa fa-calculator mr-1"></i> 计算得分</button>
+                <button id="reset-all" class="btn btn-secondary"><i class="fa fa-refresh mr-1"></i> 重新练习</button>
+            </div>
+        </div>
+
+        <!-- 统计栏 -->
+        <div class="bg-white p-4 rounded-lg shadow-sm mb-6 grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+            <div>
+                <p class="text-sm text-gray-500">总题数</p>
+                <p class="text-2xl font-bold text-gray-800" id="total-count">192</p>
+            </div>
+            <div>
+                <p class="text-sm text-gray-500">已答题数</p>
+                <p class="text-2xl font-bold text-primary" id="answered-count">0</p>
+            </div>
+            <div>
+                <p class="text-sm text-gray-500">正确题数</p>
+                <p class="text-2xl font-bold text-success" id="correct-count">0</p>
+            </div>
+            <div>
+                <p class="text-sm text-gray-500">当前得分</p>
+                <p class="text-2xl font-bold text-warning" id="current-score">0</p>
+                <p class="text-xs text-gray-500">每题1分</p>
+            </div>
+        </div>
+
+        <!-- 进度条 -->
+        <div class="mb-6">
+            <div class="flex justify-between text-sm text-gray-500 mb-1">
+                <span>答题进度</span>
+                <span id="progress-text">0/192</span>
+            </div>
+            <div class="score-bar">
+                <div class="score-progress" id="progress-bar" style="width: 0%"></div>
+            </div>
+        </div>
+
+        <!-- 题目容器 -->
+        <div id="questions-container" class="space-y-4"></div>
+
+        <!-- 得分弹窗 -->
+        <div class="modal" id="score-modal">
+            <div class="modal-content">
+                <div class="text-center mb-6">
+                    <div style="width: 60px; height: 60px; background: #e0e7ff; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px;">
+                        <i class="fa fa-trophy text-2xl text-primary"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-800">练习得分结果</h3>
+                    <p class="text-gray-500 mt-1">本次练习共作答 <span id="modal-answered" class="font-bold text-primary">0</span> 题</p>
+                </div>
+                <div class="grid grid-cols-2 gap-4 mb-6">
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <p class="text-sm text-gray-500">正确题数</p>
+                        <p class="text-2xl font-bold text-success" id="modal-correct">0</p>
+                    </div>
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <p class="text-sm text-gray-500">最终得分</p>
+                        <p class="text-2xl font-bold text-warning" id="modal-score">0</p>
+                    </div>
+                </div>
+                <div class="score-bar mb-6">
+                    <div class="score-progress" id="modal-progress" style="width: 0%"></div>
+                </div>
+                <div class="flex gap-3">
+                    <button id="modal-close" class="btn btn-secondary flex-1">关闭</button>
+                    <button id="modal-reset" class="btn btn-primary flex-1">重新练习</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 前100题完整数据
+        const questions = [
+            // 1-20题
+            {n:1,q:"信息活动包括信息的收集、信息的加工、信息存储和（）。",o:{A:"信息传递",B:"信息革命",C:"信息技术",D:"信息库"},a:"A",c:"base"},
+            {n:2,q:"信息技术包括计算机技术、网络技术和（）。",o:{A:"编码技术",B:"电子技术",C:"显示技术",D:"通信技术"},a:"D",c:"base"},
+            {n:3,q:"关于信息的产生，正确的说法是（）",o:{A:"电脑发明以后",B:"语言发明以后",C:"文字发明以后",D:"一直就有"},a:"D",c:"base"},
+            {n:4,q:"指出下列哪一个不是多媒体信息中可以包含的表现形式（）",o:{A:"文本",B:"声音",C:"光盘",D:"图像"},a:"C",c:"base"},
+            {n:5,q:"两个事物之间的信息传递，叫做（），也叫做信息传递过程",o:{A:"信道",B:"信宿",C:"信源",D:"通信"},a:"D",c:"base"},
+            {n:6,q:"人们在生产和生活中，有意识或无意识所做的信息处理和利用的活动过程，称为（）",o:{A:"信息活动",B:"通信",C:"信息",D:"信息技术"},a:"A",c:"base"},
+            {n:7,q:"现代信息技术的核心是（）、多媒体技术和网络技术",o:{A:"计算机技术",B:"通信技术",C:"电视技术",D:"信息技术"},a:"A",c:"base"},
+            {n:8,q:"小红通过因特网找到了一些关于环境保护的文章和图片，制作成网站，发布在学校的网站上，这属于信息的（）",o:{A:"传递",B:"加工",C:"收集",D:"以上都是"},a:"D",c:"base"},
+            {n:9,q:"医生用听诊器为病人听诊属于信息处理过程中的（）。",o:{A:"信息存储",B:"信息收集",C:"信息传递",D:"信息加工"},a:"B",c:"base"},
+            {n:10,q:"以下属于信息的是（）① 报纸报道上海世博会每天的入园情况；② 电视新闻报道电影《西风烈》10月23日在北京首映礼的盛况；③ 每年3月5日校园爱心捐款的情景；④ 网站、图书馆、电视台、学生成长手册；",o:{A:"③④",B:"①③④",C:"②③④",D:"①②③"},a:"D",c:"base"},
+            {n:11,q:"信息系统的安全目标主要体现为()。",o:{A:"信息保护和系统保护",B:"软件保护",C:"硬件保护",D:"网络保护"},a:"A",c:"system"},
+            {n:12,q:"信息系统的安全主要考虑()方面的安全。",o:{A:"环境",B:"软件",C:"硬件",D:"上述所有"},a:"D",c:"system"},
+            {n:13,q:"利用计算机将文字、声音、图形、图像和视频等多种媒体有机结合起来进行处理的技术称为 （）。",o:{A:"影音技术",B:"通信技术",C:"网络技术",D:"多媒体技术"},a:"D",c:"base"},
+            {n:14,q:"下面属于信息的是（）",o:{A:"程序",B:"程序语言",C:"软件",D:"显示器上显示出的内容"},a:"D",c:"base"},
+            {n:15,q:"王小强用手机照了几张同学们活动的图片，准备用在班级的电子报刊中。他的这个过程是信息的（）过程。",o:{A:"采集",B:"加工",C:"绘制",D:"合成"},a:"A",c:"base"},
+            {n:16,q:"你们班的小明和小花在预习课文时，通过微信讨论关于查到的作者背景资料，他们使用微信是利用了信息的（）过程。",o:{A:"收集",B:"传递",C:"加工",D:"整理"},a:"B",c:"base"},
+            {n:17,q:"微信是一种新的跨平台的通讯工具，下面说法不正确的是（）。",o:{A:"支持单人、多人的通讯交流。",B:"只能发送文字，不能发送图片、视频、声音。",C:"微信提供公众平台、朋友圈、消息推送等功能",D:"用户可以通过“摇一摇”、“搜索号码”、“附近的人”、扫二维码方式添加好友"},a:"B",c:"network"},
+            {n:18,q:"下列选项，不能称为信息的是（）",o:{A:"报上登载\"神七成功进行出舱活动\"的消息",B:"信息技术课本",C:"电视中播出的奥运会各国金牌数",D:"高中信息技术水平测试成绩"},a:"B",c:"base"},
+            {n:19,q:"在下列选项中，信息的可信度最高的是?()",o:{A:"某权威股评家blog上的股市走势预测",B:"某省气象台网站上的天气预报",C:"某民间培训机构发布的模拟测试卷",D:"某彩票网站发布的下期彩票预测"},a:"B",c:"base"},
+            {n:20,q:"“你有一个苹果，我有一个苹果，彼此交换一下，我们仍然是各有一个苹果。如果你有一种思想，我也有一种思想，我们相互交流，我们就都有了两种思想，甚至更多”，这体现了信息的（）",o:{A:"载体依附性",B:"时效性",C:"共享性",D:"价值性"},a:"C",c:"base"},
+            
+            // 21-40题
+            {n:21,q:"现代信息技术的核心是（）、多媒体技术和网络技术",o:{A:"计算机技术",B:"通信技术",C:"电视技术",D:"信息技术"},a:"A",c:"base"},
+            {n:22,q:"存储容量的基本单位是（）。",o:{A:"字长",B:"字节",C:"位",D:"字"},a:"B",c:"base"},
+            {n:23,q:"计算机处理信息的全过程是（）。",o:{A:"输出，处理，存贮",B:"输入，存储，处理",C:"输出，存贮，输入",D:"输入，存储与处理，输出"},a:"D",c:"base"},
+            {n:24,q:"计算机的硬件系统是由输入设备和输出设备以及（）组成。",o:{A:"CPU、控制器、存储器",B:"运算器、控制器、存储器",C:"运算器、存储器",D:"CPU、运算器、存储器"},a:"B",c:"base"},
+            {n:25,q:"能够直接被计算机接收、存储、传输、和处理的信号是：（）。",o:{A:"电视信号",B:"模拟信号",C:"数字信号",D:"录像带信号"},a:"C",c:"base"},
+            {n:26,q:"一个完整的计算机系统由()组成。",o:{A:"硬件和软件",B:"中央处理器和内存",C:"内存和外存",D:"硬件系统和软件系统"},a:"D",c:"base"},
+            {n:27,q:"某台计算机的配置为“Intel 奔腾双核 E5400 2.7GHz/金士顿4GB DDR2 800/希捷500GB 7200/ 三星DVD 52X”，则其内存的容量是（）",o:{A:"2.7GHz",B:"500GB",C:"4G",D:"52X"},a:"C",c:"base"},
+            {n:28,q:"电子计算机发展到今天已经经历了四代，按时间顺序是（）",o:{A:"电子管、晶体管、集成电路和大规模集成电路时代",B:"晶体管、电子管、集成电路和大规模集成电路时代",C:"电子管、晶体管、大规模集成电路和集成电路时代",D:"晶体管、电子管、大规模集成电路和集成电路时代"},a:"A",c:"base"},
+            {n:29,q:"在计算机系统中，具有输入功能的设备是（）",o:{A:"打印机和磁盘驱动器",B:"显示器和打印机",C:"键盘和主机",D:"键盘和鼠标"},a:"D",c:"base"},
+            {n:30,q:"我们在购买手机或电脑时，商家常以“双核或四核”为亮点向顾客介绍产品，“双核或四核”指的是手机或电脑中的（）。",o:{A:"外壳",B:"中央处理器",C:"显示器",D:"刷新频率"},a:"B",c:"base"},
+            {n:31,q:"现在计算机的内存容量一般为2G，而5年前电脑的内存一般为512M，那么现在的内存容量是5年前的（）",o:{A:"2倍",B:"3倍",C:"4倍",D:"5倍"},a:"C",c:"base"},
+            {n:32,q:"USB是Universal Serial Bus的英文缩写，中文名称为“通用串行总线”。一个USB接口可以支持()设备。",o:{A:"一种",B:"两种",C:"多种",D:"以上三者"},a:"C",c:"base"},
+            {n:33,q:"未来计算机发展的总趋势是()。",o:{A:"微型化",B:"巨型化",C:"智能化",D:"数字化"},a:"C",c:"base"},
+            {n:34,q:"当前，随着单碟500G技术全面普及，下面哪个硬盘容量正在成为台式机主流配置（）",o:{A:"500G",B:"1000G",C:"1T",D:"5T"},a:"C",c:"base"},
+            {n:35,q:"在下图中，哪个图标是快捷方式（）。",o:{A:"选项A",B:"选项B",C:"选项C",D:"选项D"},a:"B",c:"system",img:"img/图片 1.jpg"},
+            {n:36,q:"多媒体计算机是指()。",o:{A:"具有多种外部设备的计算机",B:"能与多种电器连接的计算机",C:"能处理多种媒体的计算机",D:"借助多种媒体操作的计算机"},a:"C",c:"base"},
+            {n:37,q:"课堂教学中，老师常利用“教学课件”帮助我们学习，这种“教学课件”的使用是（）的应用。",o:{A:"网络技术",B:"多媒体技术",C:"影像技术",D:"计算机技术"},a:"B",c:"base"},
+            {n:38,q:"2012年10月26日微软正式推出了新一代操作系统Windows 8，下面关于Windows 8的叙述错误的是（）",o:{A:"Windows 8的上一代系统是Windows XP",B:"Windows 8有2个模式，桌面模式很像Windows 7",C:"Windows 8可以安装在平板电脑上",D:"Windows 8支持触控操作"},a:"A",c:"system"},
+            {n:39,q:"下列设备中，（）不可用于采集数字图像。",o:{A:"扫描仪",B:"数码相机",C:"录音笔",D:"摄像头"},a:"C",c:"base"},
+            {n:40,q:"下列设备不属于输入设备的是（）",o:{A:"选项①",B:"选项②",C:"选项③",D:"选项④"},a:"C",c:"base",img:"img/图片 2.jpg"},
+            
+            // 41-60题
+            {n:41,q:"下面左图中的U盘应与右图主机背部面板中哪一个接口相连（）",o:{A:"①",B:"②",C:"③",D:"④"},a:"D",c:"base",img:"img/图片 3.jpg"},
+            {n:42,q:"U盘是一种（）。",o:{A:"控制器",B:"运算器",C:"内存储器",D:"移动存储器"},a:"D",c:"base"},
+            {n:43,q:"我们在购买手机或电脑时，商家常以“双核或四核”为亮点向顾客介绍产品，“双核或四核”指的是手机或电脑中的（）。",o:{A:"外壳",B:"中央处理器",C:"显示器",D:"刷新频率"},a:"B",c:"base"},
+            {n:44,q:"小杰对电脑说“请打印”，电脑马上执行了打印命令，这其中主要应用了人工智能中的（）。",o:{A:"图像识别技术",B:"指纹识别技术",C:"语音识别技术",D:"字符识别技术"},a:"C",c:"base"},
+            {n:45,q:"下列不属于音频文件的是()",o:{A:".cda",B:".mp3",C:".wav",D:".bmp"},a:"D",c:"base"},
+            {n:46,q:"下列不属于视频文件的是（）",o:{A:".avi",B:".mpg",C:".mp4",D:".mp3"},a:"D",c:"base"},
+            {n:47,q:"在计算机软件系统中，下列软件不属于应用软件的是（）",o:{A:"office 2010",B:"美图秀秀",C:"Windows",D:"多米音乐"},a:"C",c:"base"},
+            {n:48,q:"下面关于安卓系统和苹果IOS系统的描述错误的是（）",o:{A:"苹果IOS系统是完全封闭的系统，只运行在苹果自己的手机iPhone上，其他厂商一律没法使用",B:"苹果IOS系统与硬件的整合度高，使用非常的流畅",C:"安卓系统的发行商是微软公司",D:"安卓系统是开源的，软件发布基本无限制"},a:"C",c:"base"},
+            {n:49,q:"下列格式中,（）是图像文件格式。",o:{A:"BMP格式",B:"MP3格式",C:"MIDI格式",D:"WAV格式"},a:"A",c:"base"},
+            {n:50,q:"教育系统使用的学籍管理软件属于（）",o:{A:"应用软件",B:"共享软件",C:"系统软件",D:"自由软件"},a:"A",c:"base"},
+            {n:51,q:"数学老师自己设计制作的多媒体教学课件是属于（）。",o:{A:"系统软件",B:"杀毒软件",C:"应用软件",D:"压缩软件"},a:"C",c:"base"},
+            {n:52,q:"photoshop是（）软件。",o:{A:"文字处理软件",B:"电子表格软件",C:"演示文稿制作软件",D:"图像编辑处理软件"},a:"D",c:"base"},
+            {n:53,q:"在word中，给选定的段落、单元格图文框添加背景称为（）。",o:{A:"图文框",B:"底纹",C:"表格",D:"边框"},a:"B",c:"office"},
+            {n:54,q:"在Word文档中将插入点定位于句子“飞流直下三千尺”中的“直”与“下”之间，按一下Delete键，则该句子（）。",o:{A:"变为“飞流下三千尺”",B:"变为“飞流直三千尺”",C:"整句被删除",D:"不变"},a:"B",c:"office"},
+            {n:55,q:"在使用Word编辑文档时，假设插入点在第一段最末位置，如果按delete键，其结果是（）。",o:{A:"把第一段删除",B:"把第一段和第二段合并成一段",C:"仅删除第一段最末行的最后一个字符",D:"把第二段的第一个字符删除"},a:"B",c:"office"},
+            {n:56,q:"在Word的编辑状态下，选择了整个表格，然后按Delete键，则（）。",o:{A:"整个表格被删除",B:"表格中一列被删除",C:"表格中的一行被删除",D:"表格中的字符被删除"},a:"D",c:"office"},
+            {n:57,q:"在Word的编辑状态下，只想复制选定文字的内容而不需要复制选定文字的格式，则应（）",o:{A:"选择“编辑”-“粘贴”操作",B:"选择“编辑”-“选择性粘贴”操作",C:"在指定位置按鼠标右键",D:"直接使用粘贴按钮"},a:"B",c:"office"},
+            {n:58,q:"在Word中用拼音输入法输入汉字“绿”、“女”等字时，用下列（）键代替U。",o:{A:"U",B:"V",C:"o或e",D:"空格"},a:"B",c:"office"},
+            {n:59,q:"王芳用Word制作电子报刊作品时，需要将某图片作为一段文字的背景。操作过程为：插入图片文件后，设置图片格式，将版式设置为（）",o:{A:"嵌入型",B:"四周型",C:"衬于文字下方",D:"紧密型"},a:"C",c:"office"},
+            {n:60,q:"在WORD表格中一次性插入3行，正确的方法是（）",o:{A:"在“设计”主选项卡中可以插入",B:"把插入点放在行尾部，按回车",C:"在“插入”主选项卡中选择“表格”选项卡的插入表格，选定3行可直接插入",D:"无法实现"},a:"C",c:"office"},
+            
+            // 61-80题
+            {n:61,q:"如图所示，WORD中，该文稿采用的排版方式是（）。",o:{A:"图文混排",B:"框架结构",C:"纵横混排",D:"设置分栏"},a:"A",c:"office",img:"img/图片 4.jpg"},
+            {n:62,q:"用word制作电子报刊时，需要将某图片作为一段文字的背景，其过程为：插入图片文件后，设置图片格式，将版式设置为：（）",o:{A:"四周型",B:"嵌入型",C:"衬于文字下方",D:"浮于文字上方"},a:"C",c:"office"},
+            {n:63,q:"Word2010文档扩展名的默认类型是（）。",o:{A:"DOCX",B:"DOC",C:"DOTX",D:"DAT"},a:"A",c:"office"},
+            {n:64,q:"Word2010窗口界面的组成部分中，除常见的组成元素外，还新增加的元素是（）。",o:{A:"标题栏",B:"快速访问工具栏",C:"状态栏",D:"滚动条"},a:"B",c:"office"},
+            {n:65,q:"打印页码2-5,10,12表示打印的是（）。",o:{A:"第2页，第5页，第10页，第12页",B:"第2至5页，第10至12页",C:"第2至5页，第10页，第12页",D:"第2页，第5页，第10至12页"},a:"C",c:"office"},
+            {n:66,q:"如图，在Word文档中将插入点定位于句子“飞流直下三千尺”中的“直”与“下”之间，按一下Delete键，则该句子（）。",o:{A:"变为“飞流下三千尺”",B:"变为“飞流直三千尺”",C:"整句被删除",D:"不变"},a:"B",c:"office"},
+            {n:67,q:"一篇Word文档中的四段文字分别使用了“四号”、“五号”、“16磅”、“18磅”四种字号设置，则所设定文字的大小比较（）。",o:{A:"“四号”大于“五号”",B:"“16磅”大于“18磅”",C:"字的大小一样，字体不同",D:"“四号”小于“五号”"},a:"A",c:"office"},
+            {n:68,q:"一位同学正在撰写毕业论文，并且要求只用A4规格的纸输出，在打印预览中，发现最后一页只有一行，他想把这一行提到上一页，下面可行的办法是（）",o:{A:"改变纸张大小",B:"增大页边距",C:"减小页边距",D:"把页面方向改为横向"},a:"C",c:"office"},
+            {n:69,q:"下面有关 Word2010表格功能的说法不正确的是()。",o:{A:"可以通过表格工具将表格转换成文本",B:"表格的单元格中可以插入表格",C:"表格中可以插入图片",D:"不能设置表格的边框线"},a:"D",c:"office"},
+            {n:70,q:"“分类汇总”在哪个选项卡中？（）",o:{A:"“工具”",B:"“数据”",C:"“格式”",D:"以上都没有"},a:"B",c:"office"},
+            {n:71,q:"Excel中下列关于删除操作说法正确的是（）。",o:{A:"单元格和工作表均可以删除，并都能恢复",B:"单元格和工作表均可以删除，单元格删除能恢复，而工作表删除不能恢复",C:"单元格和工作表均可以删除，单元格删除不能恢复，而工作表删除能恢复",D:"单元格和工作表均可以删除，并均不能恢复"},a:"B",c:"office"},
+            {n:72,q:"移动Excel图表的方法是（）。",o:{A:"将鼠标指针放在图表周围单元格上，按住鼠标左键拖动",B:"将鼠标指针放在图表控点上，按住鼠标左键拖动",C:"将鼠标指针放在图表内，按住鼠标左键拖动",D:"将鼠标指针放在图表内，按住鼠标右键拖动"},a:"C",c:"office"},
+            {n:73,q:"在Excel 工作表中，行、列坐标所指定的位置称为 （）。",o:{A:"工作簿",B:"区域",C:"工作表",D:"单元格地址"},a:"D",c:"office"},
+            {n:74,q:"在Excel中下列说法正确的是（）。",o:{A:"直接可以对工作表进行分类汇总",B:"只要选定区域即可分类汇总",C:"对工作表中数据分类汇总前需要先排序",D:"对工作表中数据分类汇总前不需要先排序"},a:"C",c:"office"},
+            {n:75,q:"在Excel默认状态下，如果要输入18位身份证号码，下列（）能正确显示",o:{A:"直接输入18位数字",B:"先输入英文半角的单引号，再输入18位数字",C:"先输入 /，再输入数字",D:"先输入0，再输入数字"},a:"B",c:"office"},
+            {n:76,q:"在Excel默认状态下，在某单元格中输入1/2,确认后显示的是（）",o:{A:"1/2",B:"1月2日",C:"\"1/2\"",D:"0.5"},a:"B",c:"office"},
+            {n:77,q:"考试后老师要用Excel对全班同学的成绩进行分析处理,可能用到的操作有（）",o:{A:"计算总分、平均分",B:"排序",C:"筛选",D:"以上都是"},a:"D",c:"office"},
+            {n:78,q:"在Excel中,只显示“学生成绩表”中英语成绩大于等于85分并且小于90分的记录，可使用（）",o:{A:"查找",B:"自动筛选",C:"排序",D:"全屏显示"},a:"B",c:"office"},
+            {n:79,q:"下列关于Excel表格信息加工的说法中不正确的是（）",o:{A:"一个Excel工作簿可以有多张工作表",B:"Average（）函数可以进行求最小值运算",C:"饼图适合部分占总体的百分比",D:"B3表示第3行第2列处单元格地址"},a:"B",c:"office"},
+            {n:80,q:"在Excel工作表中，B2：E9区域包含的行数和列数分别是（）",o:{A:"4、8",B:"8、4",C:"3、7",D:"7、3"},a:"B",c:"office"},
+            
+            // 81-100题
+            {n:81,q:"在excel2010中，右击工作表标签，弹出的菜单中的“重命名”命令，则下面说法正确的是().",o:{A:"只改变工作表的名称",B:"只改变它的内容",C:"既改变名称又改变内容",D:"既不改变名称又不改变内容"},a:"A",c:"office"},
+            {n:82,q:"excel2010中“分类汇总”命令在哪个主选项卡中？（）",o:{A:"“公式”主选项卡",B:"“审阅”主选项卡",C:"“数据”主选项卡",D:"以上都不对"},a:"C",c:"office"},
+            {n:83,q:"在PowerPoint中，为幻灯片添加超级链接，要在（）命令中设置。",o:{A:"“插入”选项卡中的“超级链接”",B:"“视图”选项卡中的“备注页”",C:"“文件”选项卡中的“页面设置”",D:"“动画”选项卡中的“超级链接”"},a:"A",c:"office"},
+            {n:84,q:"PowerPoint中，在浏览视图下，按住CTRL并拖动某幻灯片，可以完成()操作。",o:{A:"移动幻灯片",B:"选定幻灯片",C:"删除幻灯片",D:"复制幻灯片"},a:"D",c:"office"},
+            {n:85,q:"王磊把在家里制作好的多媒体演示文稿“班级简介.ppt”拿到学校播放时，遇到了问题：双击“班级简介.ppt”图标后，系统提示\"不能打开此文件……\"或者出现“打开方式”对话框，可能的原因是（）",o:{A:"没有将有关的音频文件复制到学校的电脑中",B:"电脑没有上网",C:"该电脑没有安装PowerPoint软件",D:"电脑显示器有问题，出现故障"},a:"C",c:"office"},
+            {n:86,q:"在幻灯片中，若将已有的一幅图片放置在标题文本框的下面，则正确的操作方法是：选中“图片”对象，单击“叠放次序”命令中（）",o:{A:"置于文字上方",B:"置于文字下方",C:"置于顶层",D:"置于底层"},a:"D",c:"office"},
+            {n:87,q:"在演示文稿中，插入超级链接时所链接的目标，不能是（）",o:{A:"另一个演示文稿",B:"同一演示文稿的某一张幻灯片",C:"其他应用程序的文档",D:"幻灯片中的某个对象"},a:"D",c:"office"},
+            {n:88,q:"关于自定义动画的设置，以下不正确的说法是()",o:{A:"各种对象均可设置动画效果",B:"同时还可设置动画效果的声音",C:"可将对象设置成播放后隐藏",D:"自定义动画设置后，先后顺序不可改变"},a:"D",c:"office"},
+            {n:89,q:"要使幻灯片在放映时实现在不同幻灯片之间的跳转，需要为其设置（）",o:{A:"超级链接",B:"自定义动画",C:"幻灯片切换",D:"录制旁白"},a:"A",c:"office"},
+            {n:90,q:"要使幻灯片中的某个对象进入时呈现“百叶窗”效果，应该（）",o:{A:"单击“幻灯片放映/动作设置”进行设置",B:"单击“幻灯片放映/设置放映方式”进行设置",C:"单击“幻灯片放映/自定义动画”进行设置",D:"单击“幻灯片放映/幻灯片切换”进行设置"},a:"C",c:"office"},
+            {n:91,q:"在PowerPoint中,要实现幻灯片之间的任意切换，除了使用超链接外，还可通过添加（）来实现",o:{A:"鼠标选取",B:"放映按钮",C:"动作按钮",D:"滚动条"},a:"C",c:"office"},
+            {n:92,q:"如果要从一个幻灯片淡入到下一个幻灯片，应使用选项卡“幻灯片放映”中的（）命令进行设置。",o:{A:"动作按钮",B:"预设动画",C:"幻灯片切换",D:"自定义动画"},a:"C",c:"office"},
+            {n:93,q:"PowerPoint 2010中新建文件的默认名称是（）",o:{A:"DOCl",B:"SHEETl",C:"演示文稿1",D:"BOOKl"},a:"C",c:"office"},
+            {n:94,q:"按住鼠标左键，并拖动幻灯片到其他位置是进行幻灯片的操作。()",o:{A:"移动",B:"复制",C:"删除",D:"插入"},a:"A",c:"office"},
+            {n:95,q:"下列选项中不属于浏览器的是（）",o:{A:"IE浏览器",B:"PDF阅读器",C:"FIREFOX浏览器",D:"360浏览器"},a:"B",c:"network"},
+            {n:96,q:"制作网站时，网站中的Image目录一般是用来存放（）文件。",o:{A:"网页",B:"图像",C:"文本",D:"数据库"},a:"B",c:"network"},
+            {n:97,q:"在网页创建超链接时，可以设置链接的对象有（）。",o:{A:"文字",B:"按钮",C:"图片",D:"以上都是"},a:"D",c:"network"},
+            {n:98,q:"网站的建设通常都遵循一个基本的流程：维护阶段、规划阶段、设计阶段、开发阶段、发布阶段，其次序为（）。",o:{A:"规划——开发——设计——发布——维护",B:"规划——设计——开发——发布——维护",C:"设计——开发——发布——规划——维护",D:"设计——规划——开发——发布——维护"},a:"B",c:"network"},
+            {n:99,q:"网页制作的超文本标记语言是（）。",o:{A:"VB语言",B:"HTML语言",C:"BASIC语言",D:"ASCII"},a:"B",c:"network"},
+            {n:100,q:"下面关于网站制作的说法错误的是（）。",o:{A:"首先要定义站点",B:"最好提前准备好各种素材",C:"首页的文件名必须是index.html",D:"在制作时,站点一般定义为本地站点"},a:"C",c:"network"},
+            // 101-120题
+            {n:101,q:"小明经常浏览学校网站，下列能使操作更加便捷的是（）（1）、将学校网址设置为浏览器主页地址（2）、直接在地址栏中输入学校网址（3）、通过百度搜索学校网址再打开链接（4）、将学校网址添加到收藏夹。",o:{A:"（2）（3）",B:"（2）（4）",C:"（1）（3）",D:"（1）（4）"},a:"D",c:"network"},
+            {n:102,q:"遮罩动画中，遮罩层与被遮罩层的关系是（）。",o:{A:"遮罩层在被遮罩层之上",B:"遮罩层与被遮罩层没有上下关系",C:"遮罩层在被遮罩层之下",D:"以上都不是"},a:"A",c:"flash"},
+            {n:103,q:"小明用Flash软件制作文字变形动画，希望将第一帧输入的“one”变形成20帧输入的“two”。在第1帧和第20帧之间设置了形状补间，完成动画后还要进行的操作是（）",o:{A:"仅对第1帧中文字对象执行分离操作",B:"仅对第20帧中文字对象执行分离操作",C:"必须对第1帧和第20帧中文字对象分别执行分离操作",D:"不用进行任何操作，动画就已经是正确的了"},a:"C",c:"flash"},
+            {n:104,q:"在flash中，时间轴上的小格子称为（）",o:{A:"图层",B:"帧",C:"演员",D:"场景"},a:"B",c:"flash"},
+            {n:105,q:"关于在Flash中引导层里面画的轨迹线，下列说法正确的是()",o:{A:"必须是黑色",B:"必须是封闭的",C:"必须是用铅笔画的",D:"轨迹线可以交叉"},a:"D",c:"flash"},
+            {n:106,q:"在flash中（）是可以重复利用的动画对象在库中存在的形式？",o:{A:"元件",B:"图层",C:"场景",D:"帧"},a:"A",c:"flash"},
+            {n:107,q:"绘制有立体感的小球，应该使用()填充模式",o:{A:"纯色",B:"位图",C:"线性",D:"放射状"},a:"D",c:"flash"},
+            {n:108,q:"在flash中，帧就是（）",o:{A:"动画",B:"画面",C:"舞台",D:"时间"},a:"B",c:"flash"},
+            {n:109,q:"变形补间动画不能完成的效果是（）",o:{A:"小球的直线运动",B:"小球的大小变化",C:"小球的颜色变化",D:"小球沿引导线运动"},a:"D",c:"flash"},
+            {n:110,q:"flash中刚导入的声音文件并不在舞台上，那么它存在于（）",o:{A:"关键帧",B:"库",C:"图层",D:"场景"},a:"B",c:"flash"},
+            {n:111,q:"在FLASH生成的文件类型中，我们常说的源文件是指（）",o:{A:"SWF",B:"FLA",C:"EXE",D:"HTML"},a:"B",c:"flash"},
+            {n:112,q:"下列文件格式不属于Flash文件导出格式的是（）",o:{A:".docx",B:".swf",C:".exe",D:".htm"},a:"A",c:"flash"},
+            {n:113,q:"若要制作“种子发芽”动画，表现出各个萌发阶段的“种子”状态，需按照（）动画的创建方法来完成设计、制作过程。",o:{A:"引导层",B:"形状补间",C:"逐帧",D:"动作补间"},a:"C",c:"flash"},
+            {n:114,q:"在Flash中，动画制作完成后，想要测试动画的播放效果，需使用（）键进行测试。",o:{A:"Space+Enter",B:"Ctrl+Enter",C:"Shift+Enter",D:"Alt+Enter"},a:"B",c:"flash"},
+            {n:115,q:"（）动画是通过设定组件在场景中的位置变化来形成动画的方式。",o:{A:"引导层",B:"逐帧",C:"形状补间",D:"动作补间"},a:"D",c:"flash"},
+            {n:116,q:"动画原理是以人眼的（）特性为基础,通过快速更换静态图像,而在大脑中形成图像内容连续运动的感觉。",o:{A:"视觉滞后",B:"视觉暂留",C:"视觉干扰",D:"视觉停顿"},a:"B",c:"flash"},
+            {n:117,q:"下图中哪个图层中配有声音()",o:{A:"图层1",B:"图层2",C:"图层3",D:"图层4"},a:"B",c:"flash",img:"img/图片 5.jpg"},
+            {n:118,q:"如图所示选中的“图层1”是()",o:{A:"普通图层",B:"遮罩层",C:"被遮罩层",D:"引导层"},a:"C",c:"flash",img:"img/图片 6.jpg"},
+            {n:119,q:"下类哪种类型不属于Flash中的符号（也称为元件）（）。",o:{A:"图形",B:"按钮",C:"音频",D:"影片剪辑"},a:"C",c:"flash"},
+            {n:120,q:"在Flash中，如果某位同学要制作《弯月变满月》的动画，使用哪种动画制作技术手段最为方便（）。",o:{A:"逐帧动画",B:"形状补间动画",C:"动作补间动画",D:"引导层动画"},a:"B",c:"flash"},
+            
+            // 121-140题
+            {n:121,q:"如果某位同学要使用Flash制作《月亮围绕地球旋转》的动画，使用哪种动画制作技术手段最为方便（）。",o:{A:"逐帧动画",B:"动作补间动画",C:"形状补间动画",D:"引导层动画"},a:"D",c:"flash"},
+            {n:122,q:"在Flash的时间轴上连续插入如图所示的人形图像,形成人物跳远的动画是（）。",o:{A:"动作动画",B:"形状动画",C:"逐帧动画",D:"以上都有可能"},a:"C",c:"flash",img:"img/图片 7.jpg"},
+            {n:123,q:"计算机网络的功能主要是信息交换、（）和分布式计算。",o:{A:"数据共享",B:"资源共享",C:"硬件共享",D:"软件共享"},a:"B",c:"network"},
+            {n:124,q:"网络的基本拓扑结构不包括（）",o:{A:"星型",B:"环型",C:"树型",D:"总线型"},a:"C",c:"network"},
+            {n:125,q:"下列IP地址，哪个是合法的（）",o:{A:"192.168.265.1",B:"127.0,00",C:"212.211.43;",D:"211.98.222.1"},a:"D",c:"network"},
+            {n:126,q:"小明想给同学通过E-mail传送PPT电子文稿，可以使用的办法是（）",o:{A:"在邮件内容中写上有PPT文件",B:"把PPT文件复制，然后粘贴在邮件内容里",C:"无法办到",D:"通过上传附件完成PPT文稿的发送"},a:"D",c:"network"},
+            {n:127,q:"小亮把网上关于“最美教师张丽莉”的图片下载到自己的电脑中，他下载时享受的网络服务类型是（）",o:{A:"信息浏览",B:"远程登陆",C:"即时短信",D:"文件传输"},a:"D",c:"network"},
+            {n:128,q:"若E-mail地址为：tsxxjs@126.com，那么它的用户名是（）",o:{A:"tsxxjs",B:"@126.com",C:"126",D:"com"},a:"A",c:"network"},
+            {n:129,q:"在网吧或者在公共场所上网，登录自己的邮箱查看邮件，下列（）行为是恰当的。",o:{A:"选择让电脑记住自己的登录密码和帐号",B:"从邮箱下载自己的文件查看后，不必从电脑中彻底删除",C:"使用完邮箱后，选择从邮箱安全退出",D:"查看邮件中途有事离开，不需要从邮箱退出"},a:"C",c:"system"},
+            {n:130,q:"张芳从网上替同学购买一张回家的火车票，她所需的信息是（）",o:{A:"铁路售票官方网站的网址",B:"网站购票可以提前售票的天数",C:"同学的身份证号",D:"以上都包括"},a:"D",c:"network"},
+            {n:131,q:"网络游戏对青少年的吸引力越来越强，以下做法正确的是()",o:{A:"寻找免费账户，流连忘返",B:"不参与内容不健康的游戏",C:"筹备资金，尽情游戏",D:"尽量拉更多同学一起玩"},a:"B",c:"system"},
+            {n:132,q:"一座大楼内的一个计算机网络系统，一般属于()",o:{A:"PAN",B:"LAN",C:"MAN",D:"WAN"},a:"B",c:"network"},
+            {n:133,q:"下列哪个选项不属于中学生文明上网行为？（）",o:{A:"不浏览网上的不健康信息，也不尝试网上的冒险行为",B:"对于网上的虚假消息，我们不主动浏览、不随意散布",C:"上网要适度，决不沉迷于网络游戏",D:"可以尝试通过网络未经允许侵入他人计算机"},a:"D",c:"system"},
+            {n:134,q:"计算机网络系统又可分为（）",o:{A:"网络协议和网络安全",B:"网络服务器和网络协议",C:"网络硬件系统和网络软件系统",D:"网络操作系统和网络通信系统"},a:"C",c:"network"},
+            {n:135,q:"按通信距离或网络的规模可分为局域网、城域网和（）",o:{A:"因特网",B:"宽带网",C:"基带网",D:"广域网"},a:"D",c:"network"},
+            {n:136,q:"提供计算服务、资源服务和网络管理服务的计算机都被称为（）",o:{A:"服务器",B:"网关",C:"客户机",D:"交换机"},a:"A",c:"network"},
+            {n:137,q:"享用服务的计算机就是网络用户，被称为（）",o:{A:"交换机",B:"网关",C:"客户机",D:"服务器"},a:"C",c:"network"},
+            {n:138,q:"下列选项中关于360浏览器的说法中不正确的是（）",o:{A:"能将上网痕迹清理",B:"可以自定义安全级别",C:"不自带网络收藏夹功能",D:"可对网页显示内容进行安全设置"},a:"C",c:"network"},
+            {n:139,q:"网络中计算机之间的通信是通过（）实现的，它们是通信双方必须遵守的约定。",o:{A:"网卡",B:"通信协议",C:"磁盘",D:"电话交换设备"},a:"B",c:"network"},
+            {n:140,q:"小明在利用QQ聊天时，一位陌生人要小明家庭住址与电话号码，以下正确的做法是（）",o:{A:"尊重别人，立即将自己的电话、家庭住址等信息告诉他",B:"很不礼貌地回应：“休想！”",C:"经过一段时间考察，自认为对方没问题，告诉了他",D:"婉言谢绝了对方的要求"},a:"D",c:"system"},
+            
+            // 141-160题
+            {n:141,q:"小丽打开电子邮箱收件箱，发现有一封邮件有回形针标志，该标志表示（）",o:{A:"有附件",B:"紧急邮件",C:"已回复",D:"邮件未读"},a:"A",c:"network"},
+            {n:142,q:"移动互联网已经进入高速发展阶段，以下叙述错误的是（）。",o:{A:"可以预计，无线连接应用越来越广泛，会超过有线连接。",B:"蓝牙是一种短距离无线通讯技术",C:"移动互联网主要使用了无线宽带技术",D:"移动互联网是指互联网的移动化，与智能终端无关"},a:"D",c:"network"},
+            {n:143,q:"在因特网上，每台主机都有唯一的地址，该地址被称为（）",o:{A:"WWW服务器地址",B:"IP地址",C:"TCP地址",D:"WWW客户机地址"},a:"B",c:"network"},
+            {n:144,q:"下列哪种行为是不违法的？（）",o:{A:"窃取公司商业秘密数据转卖给他人",B:"利用黑客手段攻击某政府网站",C:"利用电子邮件传播计算机病毒",D:"为防泄密而给资料加密"},a:"D",c:"system"},
+            {n:145,q:"以下有关计算机病毒特征的说明正确的是（）",o:{A:"传染性、潜伏性、隐蔽性、破坏性、可触发性",B:"传染性、破坏性、易读性、潜伏性、伪装性",C:"潜伏性、可触发性、破坏性、易读性、传染性",D:"传染性、潜伏性、多发性、安全性、激发性"},a:"A",c:"system"},
+            {n:146,q:"计算机病毒是一种（）",o:{A:"特殊的计算机部件",B:"游戏软件",C:"人为编制的特殊程序",D:"能传染的生物病毒"},a:"C",c:"system"},
+            {n:147,q:"下列各项中，不属于计算机病毒特征的是（）",o:{A:"潜伏性",B:"免疫性",C:"传染性",D:"破坏性"},a:"B",c:"system"},
+            {n:148,q:"下列操作中，不能有效预防计算机病毒感染的是（）",o:{A:"对下载的文件及时杀毒",B:"打开QQ上陌生人发来的文件",C:"定期进行磁盘碎片整理",D:"不轻易打开来历不明的电子邮件"},a:"B",c:"system"},
+            {n:149,q:"计算机病毒的主要危害是（）",o:{A:"破坏计算机硬件",B:"干扰计算机的正常运行",C:"影响操作者的健康",D:"使计算机突然断电"},a:"B",c:"system"},
+            {n:150,q:"为了预防计算机病毒，应采取的正确措施是（）",o:{A:"每天都要对硬盘和软盘进行格式化",B:"不玩任何计算机游戏",C:"不用盗版软件和来历不明的光盘",D:"经常清除计算机上的尘土"},a:"C",c:"system"},
+            {n:151,q:"计算机病毒会造成计算机（）的损坏。",o:{A:"硬件、软件和数据",B:"硬件和软件",C:"软件和数据",D:"硬件和数据"},a:"C",c:"system"},
+            {n:152,q:"下列关于计算机病毒的说法中，正确的是（）",o:{A:"计算机病毒是一种有损计算机操作人员身体健康的生物病毒",B:"计算机病毒发作后，将造成计算机硬件永久性的物理损坏",C:"计算机病毒是一种通过自我复制进行传染的，破坏计算机程序和数据的小程序",D:"计算机病毒是一种有逻辑错误的程序"},a:"C",c:"system"},
+            {n:153,q:"下列哪种手段不能有效防范计算机病毒？（）",o:{A:"安装杀毒软件",B:"经常格式化硬盘",C:"经常升级杀毒软件",D:"不轻易打开来历不明的邮件附件"},a:"B",c:"system"},
+            {n:154,q:"计算机病毒的传播途径不可能是（）",o:{A:"计算机网络",B:"纸质文件",C:"磁盘",D:"电子邮件"},a:"B",c:"system"},
+            {n:155,q:"发现计算机感染病毒后，如下操作可用来清除病毒的是（）",o:{A:"使用杀毒软件清除病毒",B:"格式化硬盘",C:"整理磁盘碎片",D:"重新启动计算机"},a:"A",c:"system"},
+            {n:156,q:"下列关于计算机病毒的描述，正确的是（）",o:{A:"正版软件不会受到计算机病毒的攻击",B:"光盘上的软件不可能携带计算机病毒",C:"计算机病毒是一种特殊的计算机程序，因此它是可执行的",D:"计算机病毒只会感染可执行文件"} ,a:"C",c:"system"},
+            {n:157,q:"计算机病毒是指（）",o:{A:"编制有错误的计算机程序",B:"设计不完善的计算机程序",C:"计算机的程序已被破坏",D:"以危害系统为目的的特殊的计算机程序"},a:"D",c:"system"},
+            {n:158,q:"下列关于计算机病毒的说法中，错误的是（）",o:{A:"计算机病毒的本质是一种特殊的程序",B:"制造、散布计算机病毒是犯罪行为",C:"计算机病毒与生物病毒一样，是天然存在的",D:"计算机病毒可以通过磁盘、网络等媒介传播"},a:"C",c:"system"},
+            {n:159,q:"计算机病毒的特点是（）",o:{A:"传播性、潜伏性、破坏性",B:"传播性、潜伏性、易读性",C:"潜伏性、破坏性、易读性",D:"传播性、潜伏性、安全性"},a:"A",c:"system"},
+            {n:160,q:"下列行为中，不符合网络道德规范的是（）",o:{A:"下载正版软件",B:"在论坛上发表见解",C:"在网上传播盗版软件",D:"在网上学习知识"},a:"C",c:"system"},
+            
+            // 161-180题
+            {n:161,q:"下列选项中，不属于计算机病毒特征的是（）",o:{A:"传染性",B:"免疫性",C:"潜伏性",D:"破坏性"},a:"B",c:"system"},
+            {n:162,q:"计算机病毒的传播途径不包括（）",o:{A:"U盘",B:"光盘",C:"网络",D:"打印机"},a:"D",c:"system"},
+            {n:163,q:"为了防止计算机病毒的感染，应该做到（）",o:{A:"不接收来历不明的电子邮件",B:"不运行外来程序或者是来历不明的程序",C:"不随意下载来历不明的信息",D:"以上说法都正确"},a:"D",c:"system"},
+            {n:164,q:"计算机病毒是一种（）",o:{A:"微生物病毒",B:"化学病毒",C:"程序",D:"幻觉"},a:"C",c:"system"},
+            {n:165,q:"下列关于计算机病毒的说法正确的是（）",o:{A:"计算机病毒不能被清除",B:"计算机病毒会传染给人类",C:"计算机病毒是一段程序",D:"计算机病毒是一种硬件故障"},a:"C",c:"system"},
+            {n:166,q:"在Windows中，要移动窗口，可用鼠标拖动窗口的（）",o:{A:"标题栏",B:"菜单栏",C:"边框",D:"滚动条"},a:"A",c:"base"},
+            {n:167,q:"在Windows中，下列关于“任务栏”的叙述，错误的是（）",o:{A:"可以将任务栏设置为自动隐藏",B:"任务栏可以移动",C:"通过任务栏可以切换窗口",D:"在任务栏上只显示当前活动窗口名"},a:"D",c:"base"},
+            {n:168,q:"在Windows中，要关闭一个正常运行的程序，下列操作不正确的是（）",o:{A:"单击程序窗口右上角的“关闭”按钮",B:"按Alt+F4键",C:"按Ctrl+Alt+Del键，在弹出的对话框中选择“结束任务”",D:"直接拔掉电源插头"},a:"D",c:"base"},
+            {n:169,q:"在Windows中，下列关于“回收站”的叙述，正确的是（）",o:{A:"回收站中的文件不能恢复",B:"回收站中的文件可以恢复",C:"回收站中的文件只能保留30天",D:"回收站的大小不能调整"},a:"B",c:"base"},
+            {n:170,q:"在Windows中，要复制一个文件，下列操作正确的是（）",o:{A:"选中文件后，按Ctrl+C键，然后在目标位置按Ctrl+V键",B:"选中文件后，按Ctrl+X键，然后在目标位置按Ctrl+V键",C:"选中文件后，按Delete键",D:"选中文件后，按Shift+Delete键"},a:"A",c:"base"},
+            {n:171,q:"在Windows中，下列关于“开始”菜单的叙述，错误的是（）",o:{A:"通过“开始”菜单可以启动程序",B:"通过“开始”菜单可以打开文档",C:"通过“开始”菜单可以关闭计算机",D:"“开始”菜单不能自定义"},a:"D",c:"base"},
+            {n:172,q:"在Windows中，要查看磁盘剩余空间，可右键单击磁盘图标，选择（）",o:{A:"“打开”",B:"“属性”",C:"“搜索”",D:"“共享”"},a:"B",c:"base"},
+            {n:173,q:"在Windows中，下列关于“文件夹”的叙述，正确的是（）",o:{A:"文件夹只能存放文件",B:"文件夹不能存放文件夹",C:"文件夹可以存放文件和文件夹",D:"文件夹不能重命名"},a:"C",c:"base"},
+            {n:174,q:"在Windows中，要切换输入法，可按（）键",o:{A:"Ctrl+Shift",B:"Ctrl+Space",C:"Alt+Shift",D:"Alt+Space"},a:"A",c:"base"},
+            {n:175,q:"在Windows中，下列关于“桌面”的叙述，错误的是（）",o:{A:"桌面是Windows启动后的初始屏幕",B:"桌面可以设置背景图片",C:"桌面图标不能移动",D:"桌面可以添加快捷方式"},a:"C",c:"base"},
+            {n:176,q:"在Windows中，要打开“任务管理器”，可按（）键",o:{A:"Ctrl+Shift+Esc",B:"Ctrl+Alt+Esc",C:"Ctrl+Shift+Del",D:"Ctrl+Alt+Del"},a:"D",c:"base"},
+            {n:177,q:"在Windows中，下列关于“文件”的叙述，正确的是（）",o:{A:"文件的扩展名不能修改",B:"文件的名称不能修改",C:"文件的属性可以修改",D:"文件不能复制"},a:"C",c:"base"},
+            {n:178,q:"在Windows中，要查找文件或文件夹，可通过（）进行",o:{A:"“开始”菜单中的“搜索”",B:"“我的文档”",C:"“控制面板”",D:"“回收站”"},a:"A",c:"base"},
+            {n:179,q:"在Windows中，下列关于“控制面板”的叙述，正确的是（）",o:{A:"控制面板不能调整系统设置",B:"控制面板可以添加或删除程序",C:"控制面板不能管理硬件设备",D:"控制面板不能设置日期和时间"},a:"B",c:"base"},
+            {n:180,q:"在Windows中，要关闭当前窗口，可按（）键",o:{A:"Ctrl+F4",B:"Alt+F4",C:"Shift+F4",D:"Esc"},a:"B",c:"base"},
+            
+            // 181-192题
+            {n:181,q:"在Windows中，下列关于“鼠标”的叙述，错误的是（）",o:{A:"鼠标可以双击打开文件或文件夹",B:"鼠标可以拖动文件或文件夹",C:"鼠标的右键功能与左键功能相同",D:"鼠标可以选中文件或文件夹"},a:"C",c:"base"},
+            {n:182,q:"在Windows中，要设置屏幕分辨率，可通过（）进行",o:{A:"“控制面板”中的“显示”",B:"“我的文档”",C:"“回收站”",D:"“任务栏”"},a:"A",c:"base"},
+            {n:183,q:"在Windows中，下列关于“窗口”的叙述，正确的是（）",o:{A:"窗口不能最小化",B:"窗口不能最大化",C:"窗口可以移动",D:"窗口不能关闭"},a:"C",c:"base"},
+            {n:184,q:"在Windows中，要复制文件到U盘，下列操作正确的是（）",o:{A:"选中文件后，直接拖到U盘图标上",B:"选中文件后，按Ctrl+X键，然后拖到U盘图标上",C:"选中文件后，按Delete键",D:"选中文件后，按Shift+Delete键"},a:"A",c:"base"},
+            {n:185,q:"在Windows中，下列关于“回收站”的叙述，正确的是（）",o:{A:"回收站是内存中的一块区域",B:"回收站是硬盘中的一块区域",C:"回收站是光盘中的一块区域",D:"回收站是U盘中的一块区域"},a:"B",c:"base"},
+            {n:186,q:"在Windows中，要更改桌面背景，可右键单击桌面空白处，选择（）",o:{A:"“查看”",B:"“排序方式”",C:"“个性化”",D:"“新建”"},a:"C",c:"base"},
+            {n:187,q:"在Windows中，下列关于“输入法”的叙述，正确的是（）",o:{A:"输入法不能添加",B:"输入法不能删除",C:"输入法可以切换",D:"输入法不能设置默认"},a:"C",c:"base"},
+            {n:188,q:"在Windows中，要打开“我的电脑”，可通过（）进行",o:{A:"“开始”菜单中的“计算机”",B:"“我的文档”",C:"“回收站”",D:"“控制面板”"},a:"A",c:"base"},
+            {n:189,q:"在Windows中，下列关于“文件属性”的叙述，错误的是（）",o:{A:"文件可以设置为“只读”属性",B:"文件可以设置为“隐藏”属性",C:"文件属性不能修改",D:"文件可以设置为“存档”属性"},a:"C",c:"base"},
+            {n:190,q:"在Windows中，要调整任务栏位置，可（）",o:{A:"右键单击任务栏空白处，选择“属性”",B:"直接拖动任务栏",C:"双击任务栏空白处",D:"按Ctrl+Shift键"},a:"B",c:"base"},
+            {n:191,q:"在Windows中，下列关于“程序”的叙述，正确的是（）",o:{A:"程序不能卸载",B:"程序可以安装",C:"程序只能从“开始”菜单启动",D:"程序不能创建快捷方式"},a:"B",c:"base"},
+            {n:192,q:"在Windows中，要设置日期和时间，可通过（）进行",o:{A:"“控制面板”中的“日期和时间”",B:"“我的文档”",C:"“回收站”",D:"“任务栏”"},a:"A",c:"base"}
+        
+        ];
+
+        // 全局状态
+        const state = {
+            userAnswers: {}, // {题号: 选中选项}
+            currentCate: 'all',
+            showAnswer: true
+        };
+
+        // DOM元素
+        const el = {
+            questionsContainer: document.getElementById('questions-container'),
+            totalCount: document.getElementById('total-count'),
+            answeredCount: document.getElementById('answered-count'),
+            correctCount: document.getElementById('correct-count'),
+            currentScore: document.getElementById('current-score'),
+            progressBar: document.getElementById('progress-bar'),
+            progressText: document.getElementById('progress-text'),
+            toggleAns: document.getElementById('toggle-ans'),
+            calcScore: document.getElementById('calc-score'),
+            resetAll: document.getElementById('reset-all'),
+            categoryTags: document.querySelectorAll('.category-tag'),
+            scoreModal: document.getElementById('score-modal'),
+            modalClose: document.getElementById('modal-close'),
+            modalReset: document.getElementById('modal-reset'),
+            modalAnswered: document.getElementById('modal-answered'),
+            modalCorrect: document.getElementById('modal-correct'),
+            modalScore: document.getElementById('modal-score'),
+            modalProgress: document.getElementById('modal-progress')
+        };
+
+        // 初始化
+        function init() {
+            renderQuestions();
+            bindEvents();
+            updateStats();
+        }
+
+        // 渲染题目
+        function renderQuestions() {
+            el.questionsContainer.innerHTML = '';
+            
+            questions.forEach(q => {
+                // 分类筛选
+                if (state.currentCate !== 'all' && q.c !== state.currentCate) return;
+                
+                const isAnswered = state.userAnswers[q.n] !== undefined;
+                const userAns = state.userAnswers[q.n];
+                const isCorrect = isAnswered && userAns === q.a;
+
+                // 创建题目卡片
+                const card = document.createElement('div');
+                card.className = `question-card ${isAnswered ? 'question-answered' : ''}`;
+                card.dataset.number = q.n;
+                card.dataset.cate = q.c;
+
+                // 生成选项HTML
+                let optionsHtml = '';
+                for (const [key, val] of Object.entries(q.o)) {
+                    let optionClass = 'option-unselected';
+                    if (isAnswered) {
+                        if (userAns === key) {
+                            optionClass = isCorrect ? 'option-correct' : 'option-wrong';
+                        }
+                    }
+                    optionsHtml += `
+                        <div class="option-btn ${optionClass}" data-q="${q.n}" data-opt="${key}">
+                            <i class="fa ${userAns === key ? 'fa-check-circle' : 'fa-circle-o'}"></i>
+                            <span>${key}：${val}</span>
+                        </div>
+                    `;
+                }
+
+                // 标准答案显示
+                const answerText = `标准答案：${q.a}（${q.o[q.a]}）`;
+                card.innerHTML = `
+                    <div class="question-header">
+                        <div class="question-title">
+                            <span class="question-number">${q.n}</span>
+                            ${q.q}
+                            ${q.img ? `<img src="${q.img}" alt="图片" class="question-img">` : ''}
+                        </div>
+                        <span class="category-tag ${getCateColor(q.c)}">${getCateName(q.c)}</span>
+                    </div>
+                    <div class="options-container">${optionsHtml}</div>
+                    <div class="answer-area ${state.showAnswer ? '' : 'hide-ans'}">
+                        <p class="${isCorrect ? 'text-success' : isAnswered ? 'text-danger' : 'text-info'}">
+                            ${isAnswered 
+                                ? (isCorrect ? `✅ 回答正确！${answerText}` : `❌ 回答错误！${answerText}`) 
+                                : '💡 点击选项作答后显示标准答案'}
+                        </p>
+                    </div>
+                `;
+
+                el.questionsContainer.appendChild(card);
+            });
+        }
+
+        // 获取分类颜色
+        function getCateColor(cate) {
+            const colorMap = {
+                base: 'bg-blue-100 text-blue-700',
+                office: 'bg-purple-100 text-purple-700',
+                network: 'bg-green-100 text-green-700',
+                flash: 'bg-yellow-100 text-yellow-700',
+                system: 'bg-red-100 text-red-700'
+            };
+            return colorMap[cate] || 'bg-gray-100 text-gray-700';
+        }
+
+        // 获取分类名称
+        function getCateName(cate) {
+            const nameMap = {
+                base: '计算机基础',
+                office: 'Office办公',
+                network: '网络知识',
+                flash: 'Flash动画',
+                system: '系统安全'
+            };
+            return nameMap[cate] || '其他';
+        }
+
+        // 更新统计数据
+        function updateStats() {
+            const answered = Object.keys(state.userAnswers).length;
+            let correct = 0;
+
+            // 计算正确题数
+            for (const [qNum, ans] of Object.entries(state.userAnswers)) {
+                const question = questions.find(q => q.n === parseInt(qNum));
+                if (question && ans === question.a) {
+                    correct++;
+                }
+            }
+
+            // 更新DOM
+            el.answeredCount.textContent = answered;
+            el.correctCount.textContent = correct;
+            el.currentScore.textContent = correct;
+            const progress = (answered / questions.length) * 100;
+            el.progressBar.style.width = `${progress}%`;
+            el.progressText.textContent = `${answered}/${questions.length}`;
+
+            // 更新弹窗统计
+            el.modalAnswered.textContent = answered;
+            el.modalCorrect.textContent = correct;
+            el.modalScore.textContent = correct;
+            el.modalProgress.style.width = answered > 0 ? `${(correct / answered) * 100}%` : '0%';
+        }
+
+        // 绑定事件
+        function bindEvents() {
+            // 选项点击事件
+            el.questionsContainer.addEventListener('click', (e) => {
+                if (e.target.closest('.option-btn')) {
+                    const btn = e.target.closest('.option-btn');
+                    const qNum = parseInt(btn.dataset.q);
+                    const opt = btn.dataset.opt;
+                    state.userAnswers[qNum] = opt;
+                    updateStats();
+                    renderQuestions();
+                }
+            });
+
+            // 分类筛选事件
+            el.categoryTags.forEach(tag => {
+                tag.addEventListener('click', () => {
+                    el.categoryTags.forEach(t => t.classList.remove('category-active'));
+                    tag.classList.add('category-active');
+                    state.currentCate = tag.dataset.cate;
+                    renderQuestions();
+                });
+            });
+
+            // 切换答案显隐
+            el.toggleAns.addEventListener('click', () => {
+                state.showAnswer = !state.showAnswer;
+                el.toggleAns.innerHTML = state.showAnswer 
+                    ? '<i class="fa fa-eye-slash mr-1"></i> 隐藏答案' 
+                    : '<i class="fa fa-eye mr-1"></i> 显示答案';
+                document.querySelectorAll('.answer-area').forEach(area => {
+                    area.classList.toggle('hide-ans', !state.showAnswer);
+                });
+            });
+
+            // 计算得分（显示弹窗）
+            el.calcScore.addEventListener('click', () => {
+                if (Object.keys(state.userAnswers).length === 0) {
+                    alert('💡 还未作答任何题目，请先选择选项作答！');
+                    return;
+                }
+                el.scoreModal.classList.add('show');
+            });
+
+            // 关闭弹窗
+            el.modalClose.addEventListener('click', () => {
+                el.scoreModal.classList.remove('show');
+            });
+
+            // 弹窗重新练习
+            el.modalReset.addEventListener('click', () => {
+                resetAllAnswers();
+                el.scoreModal.classList.remove('show');
+            });
+
+            // 重新练习
+            el.resetAll.addEventListener('click', () => {
+                if (confirm('⚠️ 确定要清空所有作答记录，重新开始练习吗？')) {
+                    resetAllAnswers();
+                }
+            });
+
+            // 点击弹窗外层关闭
+            el.scoreModal.addEventListener('click', (e) => {
+                if (e.target === el.scoreModal) {
+                    el.scoreModal.classList.remove('show');
+                }
+            });
+        }
+
+        // 重置所有作答
+        function resetAllAnswers() {
+            state.userAnswers = {};
+            updateStats();
+            renderQuestions();
+        }
+
+        // 页面加载初始化
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
