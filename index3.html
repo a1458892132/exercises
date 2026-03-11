@@ -33,7 +33,7 @@
         .option-wrong { border-color: #F53F3F; background: #fef2f2; color: #F53F3F; }
         .category-tag { padding: 4px 10px; border-radius: 16px; font-size: 12px; cursor: pointer; margin-right: 6px; margin-bottom: 6px; display: inline-block; }
         .category-active { background: #e0e7ff; color: #165DFF; border: 1px solid #165DFF; }
-        .btn { padding: 8px 16px; border-radius: 6px; font-size: 14px; cursor: pointer; transition: all 0.2s; border: none; }
+        .btn { padding: 8px 16px; border-radius: 6px; font-size: 14px; cursor: pointer; transition: all 0.2s; border: none; display: inline-block;}
         .btn-primary { background: #165DFF; color: white; }
         .btn-primary:hover { background: #0d47a1; }
         .btn-secondary { background: white; border: 1px solid #ddd; color: #333; }
@@ -55,12 +55,17 @@
 </head>
 <body>
     <div class="container py-8">
+        <!--浮动切换页面按钮-->
+        <div class="fixed top-4 left-0 z-50">
+            <a href="index.html" class="btn-primary flex items-center gap-1 mb-2 btn" style="display: block;">
+                判断题
+            </a>
+            <a href="index2.html" class="btn-primary flex items-center gap-1 btn">
+                多选题
+            </a>
+        </div>
         <header class="text-center mb-8">
             <h1 class="text-2xl md:text-2.5xl font-bold text-gray-800">计算机基础单选题题库</h1>
-            <p class="text-gray-500 mt-2">
-                <a class="text-primary" href="index1.html">判断题</a>
-                <a class="text-primary" href="index2.html">多选题</a>
-            </p>
         </header>
 
         <!-- 功能栏 -->
