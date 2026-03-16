@@ -16,56 +16,78 @@
                         danger: '#F53F3F',
                         warning: '#FF7D00',
                         info: '#86909C',
-                    }
+                        light: '#F2F3F5',
+                        dark: '#1D2129',
+                    },
+                    fontFamily: {
+                        sans: ['Microsoft YaHei', 'Inter', 'system-ui', 'sans-serif'],
+                    },
                 }
             }
         }
     </script>
-    <style>
-        body { background: #f9fafb; font-family: "Microsoft YaHei", sans-serif; }
-        .container { max-width: 1200px; margin: 0 auto; padding: 0 15px; }
-        .question-card { background: white; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); padding: 16px; margin-bottom: 12px; border-left: 4px solid transparent; transition: all 0.3s; }
-        .question-answered { border-left-color: #165DFF; }
-        .question-card:hover { box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        .option-btn { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border: 2px solid #86909C; border-radius: 6px; margin-bottom: 8px; cursor: pointer; transition: all 0.2s; background: white; color: #333; }
-        .option-btn:hover { background: #f2f3f5; }
-        .option-correct { border-color: #00B42A; background: #f0fdf4; color: #00B42A; }
-        .option-wrong { border-color: #F53F3F; background: #fef2f2; color: #F53F3F; }
-        .category-tag { padding: 4px 10px; border-radius: 16px; font-size: 12px; cursor: pointer; margin-right: 6px; margin-bottom: 6px; display: inline-block; }
-        .category-active { background: #e0e7ff; color: #165DFF; border: 1px solid #165DFF; }
-        .btn { padding: 8px 16px; border-radius: 6px; font-size: 14px; cursor: pointer; transition: all 0.2s; border: none; display: inline-block;}
-        .btn-primary { background: #165DFF; color: white; }
-        .btn-primary:hover { background: #0d47a1; }
-        .btn-secondary { background: white; border: 1px solid #ddd; color: #333; }
-        .btn-secondary:hover { background: #f5f5f5; }
-        .score-bar { height: 8px; background: #e5e7eb; border-radius: 4px; overflow: hidden; }
-        .score-progress { height: 100%; background: #165DFF; transition: width 0.5s; }
-        .answer-area { margin-top: 8px; font-size: 13px; }
-        .hide-ans { filter: blur(4px); cursor: pointer; }
-        .hide-ans:hover { filter: blur(2px); }
-        .modal { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 100; display: none; }
-        .modal-content { background: white; border-radius: 12px; padding: 24px; width: 90%; max-width: 400px; transform: scale(0.95); opacity: 0; transition: all 0.3s; }
-        .modal.show { display: flex; }
-        .modal.show .modal-content { transform: scale(1); opacity: 1; }
-        .option-btn i { font-size: 12px; }
-        .question-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
-        .question-title { font-size: 16px; font-weight: 600; color: #333; flex: 1; }
-        .question-number { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; background: #165DFF; color: white; border-radius: 50%; font-size: 12px; margin-right: 8px; }
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .question-card {
+                @apply bg-white rounded-lg shadow-md p-5 mb-4 transition-all duration-300 hover:shadow-lg border-l-4 border-transparent;
+            }
+            .question-answered {
+                @apply border-l-4 border-primary;
+            }
+            .option-btn {
+                @apply w-full flex items-center gap-2 px-4 py-2.5 rounded-lg font-medium transition-all duration-200 border-2 mb-2;
+            }
+            .option-unselected {
+                @apply border-info bg-white text-info hover:bg-info/5 hover:border-info/80;
+            }
+            .option-correct {
+                @apply border-success bg-success/10 text-success;
+            }
+            .option-wrong {
+                @apply border-danger bg-danger/10 text-danger;
+            }
+            .score-bar {
+                @apply h-2 bg-gray-200 rounded-full overflow-hidden;
+            }
+            .score-progress {
+                @apply h-full bg-primary transition-all duration-500 ease-in-out;
+            }
+            .category-tag {
+                @apply px-3 py-1 rounded-full text-xs font-medium mr-2 mb-2 cursor-pointer;
+                width: 100px;
+                text-align: center;
+            }
+            .category-active {
+                @apply bg-primary/10 text-primary border border-primary/20;
+            }
+            .btn-primary {
+                @apply bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors duration-200 font-medium;
+            }
+            .btn-secondary {
+                @apply bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors duration-200 font-medium;
+            }
+            .hide-ans {
+                @apply blur-sm;
+            }
+        }
     </style>
 </head>
-<body>
-    <div class="container py-8">
+<body class="bg-gray-50 min-h-screen pb-20">
+    <div class="container mx-auto px-4 py-6 max-w-4xl">
         <!--浮动切换页面按钮-->
         <div class="fixed top-4 left-0 z-50">
-            <a href="index.html" class="btn-primary flex items-center gap-1 mb-2 btn" style="display: block;">
+            <a href="index.html" class="btn-secondary flex items-center gap-1 mb-2 btn">
                 判断题
             </a>
-            <a href="index2.html" class="btn-primary flex items-center gap-1 btn">
+            <a href="index2.html" class="btn-secondary flex items-center gap-1 mb-2 btn">
                 多选题
             </a>
+            <a href="#" class="btn-primary flex items-center gap-1 btn">
+                单选题
+            </a>
         </div>
-        <header class="text-center mb-8">
-            <h1 class="text-2xl md:text-2.5xl font-bold text-gray-800">计算机基础单选题题库</h1>
+        <header class="mb-6 text-center">
+            <h1 class="text-[clamp(1.6rem,4vw,2.2rem)] font-bold text-dark mb-2">计算机基础单选题题库</h1>
         </header>
 
         <!-- 功能栏 -->
@@ -442,12 +464,12 @@
                 // 标准答案显示
                 const answerText = `标准答案：${q.a}（${q.o[q.a]}）`;
                 card.innerHTML = `
-                    <div class="question-header">
-                        <div class="question-title">
+                    <div class="question-header flex items-start justify-between mb-3">
+                        <h3 class="text-lg font-semibold text-dark items-center gap-2">
                             <span class="question-number">${q.n}</span>
                             ${q.q}
                             ${q.img ? `<img src="${q.img}" alt="图片" class="question-img">` : ''}
-                        </div>
+                        </h3>
                         <span class="category-tag ${getCateColor(q.c)}">${getCateName(q.c)}</span>
                     </div>
                     <div class="options-container">${optionsHtml}</div>
